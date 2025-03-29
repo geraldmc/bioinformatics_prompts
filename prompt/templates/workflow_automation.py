@@ -260,5 +260,12 @@ if __name__ == "__main__":
     print(prompt)
     
     # Save prompt template to JSON
-    with open("workflow_automation_prompt.json", "w") as f:
+    with open("../workflow_automation_prompt.json", "w") as f:
         f.write(workflow_automation_prompt.to_json())
+
+   # Load prompt template from JSON
+    with open("../workflow_automation_prompt.json", "r") as f:
+        loaded_prompt = BioinformaticsPrompt.from_json(f.read())
+    
+    # Verify it works the same
+    assert loaded_prompt.generate_prompt(user_query) == prompt

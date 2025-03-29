@@ -1,0 +1,72 @@
+{
+  "discipline": "Single-Cell Genomics",
+  "description": "Single-cell genomics examines the genetic and transcriptomic profiles of individual cells, revealing cellular heterogeneity masked in bulk analyses. These techniques enable researchers to identify rare cell populations, trace developmental trajectories, and understand cell-to-cell variability in complex tissues and disease states. By profiling thousands to millions of cells simultaneously, single-cell approaches provide unprecedented resolution into cellular diversity, lineage relationships, and dynamic biological processes.",
+  "key_concepts": [
+    "Cellular heterogeneity and rare cell type identification",
+    "Dimensionality reduction and visualization (PCA, t-SNE, UMAP)",
+    "Cell clustering and annotation",
+    "Trajectory inference and pseudotime analysis",
+    "Differential expression analysis at single-cell level",
+    "Batch effect correction and data integration",
+    "Gene regulatory network inference",
+    "Multi-modal single-cell analysis (RNA, ATAC, protein)"
+  ],
+  "common_tools": [
+    "Seurat - R package for single-cell analysis",
+    "Scanpy - Python-based single-cell analysis suite",
+    "Monocle/Monocle3 - Trajectory analysis",
+    "Cell Ranger - 10x Genomics preprocessing pipeline",
+    "SCENIC - Gene regulatory network inference",
+    "Harmony/Scanorama/LIGER - Batch correction and integration",
+    "Velocyto/scVelo - RNA velocity analysis",
+    "CellPhoneDB - Cell-cell communication inference"
+  ],
+  "common_file_formats": [
+    {
+      "name": "H5AD",
+      "description": "AnnData format for Scanpy (HDF5-based)"
+    },
+    {
+      "name": "RDS",
+      "description": "R data serialization for Seurat objects"
+    },
+    {
+      "name": "MTX/HDF5",
+      "description": "Sparse matrix formats for count data"
+    },
+    {
+      "name": "FASTQ",
+      "description": "Raw sequencing reads"
+    },
+    {
+      "name": "BAM",
+      "description": "Aligned sequence data"
+    },
+    {
+      "name": "Loom",
+      "description": "Columnar format for large omics datasets"
+    },
+    {
+      "name": "CellBrowser",
+      "description": "Web visualization format for single-cell data"
+    }
+  ],
+  "examples": [
+    {
+      "query": "What are the key analytical decisions for a scRNA-seq experiment focused on tumor heterogeneity?",
+      "context": "The user is planning a single-cell RNA-seq study of tumor samples and needs guidance on the analytical workflow and decision points.",
+      "response": "\n# Single-Cell RNA-seq Analysis for Tumor Heterogeneity\n\n## Conceptual Framework\n\nAnalyzing tumor heterogeneity with scRNA-seq requires a structured decision framework across these key analytical stages:\n\n1. **Pre-processing & quality assessment**\n2. **Computational cell type identification**\n3. **Tumor microenvironment characterization**\n4. **Clonal diversity & evolution analysis**\n5. **Functional & pathway interpretation**\n\n## Critical Decision Points\n\n### Experimental Design Decisions\n- **Sample preparation**: Fresh vs. frozen tissue considerations\n- **Platform selection**: Droplet-based (10x) vs. plate-based (Smart-seq2) tradeoffs\n  - Droplet: Higher cell counts but shallower sequencing\n  - Plate-based: Deeper sequencing but fewer cells\n- **Cell enrichment strategy**: Whole tumor vs. sorted populations \n- **Controls**: Need for matched normal tissue or peripheral blood\n- **Multi-modal considerations**: RNA-only vs. RNA+protein/ATAC\n\n### Pre-processing Decisions\n- **Quality control thresholds**: Balance between stringency and cell recovery\n  - Minimum features (genes): 200-1000 depending on platform\n  - Maximum mitochondrial percentage: 10-20% (tumor-dependent)\n  - Doublet detection approach: Cell filtration vs. computational removal\n- **Normalization strategy**: Global scaling vs. SCTransform vs. pool-based\n- **Feature selection**: Highly variable gene identification approach\n- **Batch correction**: Need and method selection based on experimental design\n\n### Clustering & Cell Type Identification\n- **Dimensionality reduction**: PCA components to retain (30-50 typical)\n- **Clustering resolution**: Low (major cell types) vs. high (subtle states)\n- **Visualization approach**: t-SNE vs. UMAP parameters\n- **Cell type annotation**: Reference-based vs. marker-driven approaches\n  - References: Established atlases vs. custom references\n  - Markers: Literature-derived vs. computationally identified\n\n### Tumor-Specific Analysis\n- **Malignant cell identification**: CNV inference vs. marker-based approaches\n- **Stromal/immune profiling**: General markers vs. specialized references\n- **Cancer subtype classification**: De novo clustering vs. signature scoring\n- **Pathway activity estimation**: GSEA vs. AUCell vs. Metascape\n- **Intratumoral heterogeneity quantification**: Continuous vs. discrete approaches\n\n### Advanced Analyses\n- **Developmental trajectory inference**: Method selection based on biological context\n  - Linear processes: Slingshot, Monocle2\n  - Tree-like processes: Monocle3, PAGA\n- **RNA velocity**: Splicing-based (Velocyto) vs. dynamical model (scVelo)\n- **Cell-cell interaction**: Tools like CellPhoneDB, CellChat, or NicheNet\n- **Gene regulatory network**: SCENIC vs. integrated approaches\n\n## Implementation Framework\n\nYour analytical approach should prioritize these considerations:\n\n- **Alignment with biological question**: Focus on markers and methods specific to cancer biology\n- **Robustness assessment**: Confirm findings persist across clustering parameters\n- **Orthogonal validation**: Plan for spatial or functional validation of key findings\n- **Integration capability**: Position your analysis for integration with other tumors/datasets\n\n## Useful Resources\n\n- [Tumor Cell Atlas Consortium](https://www.humancellatlas.org/biological-networks/)\n- [scRNA-seq analysis tutorial with Seurat](https://satijalab.org/seurat/articles/pbmc3k_tutorial.html)\n- [Scanpy tutorials for cancer analysis](https://scanpy-tutorials.readthedocs.io/)\n- [Best practices for single-cell analysis](https://doi.org/10.1038/s41576-020-0276-2)\n"
+    },
+    {
+      "query": "How do I integrate multiple single-cell datasets from different batches and technologies?",
+      "context": "The user has several scRNA-seq datasets generated with different platforms (10x, Smart-seq2) and needs to integrate them for a unified analysis.",
+      "response": "\n# Integration of Heterogeneous Single-Cell Datasets\n\n## Conceptual Framework\n\nIntegrating single-cell datasets across batches and technologies requires addressing three core challenges:\n\n1. **Technical variation**: Platform-specific biases and batch effects\n2. **Biological variation**: True differences in cell states and types\n3. **Data structure compatibility**: Reconciling different feature spaces\n\nThe integration process involves these key stages:\n- Pre-integration quality control\n- Feature space harmonization\n- Batch effect correction\n- Integrated analysis\n- Post-integration validation\n\n## Decision Framework\n\n### Pre-Integration Assessment\n- **Dataset compatibility evaluation**:\n  - Cell type overlap: Substantial vs. minimal shared populations\n  - Sequencing depth differences: Shallow vs. deep profiling\n  - Protocol differences: UMI-based vs. full-length\n  - Experimental conditions: Time points, treatments, tissues\n- **Reference selection**: Use highest-quality dataset or external reference?\n- **Analysis scope**: Full transcriptome vs. conserved highly variable features\n\n### Feature Space Decisions\n- **Gene set selection strategy**:\n  - Highly variable genes in each dataset independently\n  - Genes variable across all datasets\n  - Curated marker panels for expected cell types\n  - Platform-agnostic features (protein-coding genes only)\n- **Feature space dimensions**: Number of genes to include (1000-5000 typical)\n- **Anchor features**: Cell type markers vs. housekeeping genes as guides\n\n### Integration Method Selection\n- **Method choice based on dataset relationships**:\n  - **Canonical Correlation Analysis (Seurat)**: Best for partially overlapping populations\n  - **Mutual Nearest Neighbors (Scanorama)**: Robust for varied cell type compositions\n  - **Harmony**: Effective for multiple batches with shared cell types\n  - **LIGER**: Useful for finding shared and dataset-specific patterns\n  - **scVI**: Deep learning approach handling complex batch effects\n  - **BBKNN**: Fast for very large datasets\n\n### Integration Parameters\n- **Anchor selection**: Number and quality threshold of anchors/mutual neighbors\n- **Dimensionality**: Number of components/dimensions for integration\n- **Regularization**: Strength of batch effect correction vs. preservation of biological signal\n- **Scaling factors**: Accounting for different sequencing depths\n\n### Post-Integration Analysis\n- **Integration quality assessment**:\n  - Batch mixing metrics (kBET, LISI scores)\n  - Conservation of known biological signals\n  - Cell type clustering by biological rather than technical factors\n- **Label transfer approach**: Confidence thresholds for annotation propagation\n- **Differential expression strategy**:\n  - Paired approach with batch as covariate\n  - Dataset-specific vs. integrated testing\n  - Pseudobulk vs. single-cell level testing\n\n## Implementation Considerations\n\nYour integration strategy should prioritize:\n- **Biological signal preservation**: Test with known markers before/after integration\n- **Conservative correction**: Start with mild integration parameters, then increase if needed\n- **Incremental integration**: For many datasets, consider hierarchical integration strategies\n- **Validation**: Confirm integrated results with orthogonal methods or known biology\n\n## Useful Resources\n\n- [Harmony integration tutorial](https://github.com/immunogenomics/harmony)\n- [Seurat integration vignette](https://satijalab.org/seurat/articles/integration_introduction.html)\n- [Scanpy integration examples](https://scanpy.readthedocs.io/en/stable/tutorials.html)\n- [Benchmarking of integration methods](https://doi.org/10.1038/s41592-021-01336-8)\n"
+    }
+  ],
+  "references": [
+    "Luecken MD, Theis FJ. (2019). Current best practices in single\u2010cell RNA\u2010seq analysis: a tutorial. Molecular Systems Biology, 15(6), e8746.",
+    "Stuart T, Satija R. (2019). Integrative single-cell analysis. Nature Reviews Genetics, 20(5), 257-272.",
+    "L\u00e4hnemann D, et al. (2020). Eleven grand challenges in single-cell data science. Genome Biology, 21(1), 1-35.",
+    "Chen G, et al. (2019). Single-cell multi-omics technology: methodology and application. Frontiers in Cell and Developmental Biology, 7, 260."
+  ]
+}

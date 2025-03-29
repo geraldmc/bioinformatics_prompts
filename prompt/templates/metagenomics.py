@@ -4,7 +4,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # add project root to sys.path
 
-from prompt.templates.prompt_template import BioinformaticsPrompt, FewShotExample
+from templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a metagenomics prompt template
 metagenomics_prompt = BioinformaticsPrompt(
@@ -411,5 +411,12 @@ if __name__ == "__main__":
     print(prompt)
     
     # Save prompt template to JSON
-    with open("metagenomics_prompt.json", "w") as f:
+    with open("../metagenomics_prompt.json", "w") as f:
         f.write(metagenomics_prompt.to_json())
+
+   # Load prompt template from JSON
+    with open("../metagenomics_prompt.json", "r") as f:
+        loaded_prompt = BioinformaticsPrompt.from_json(f.read())
+    
+    # Verify it works the same
+    assert loaded_prompt.generate_prompt(user_query) == prompt

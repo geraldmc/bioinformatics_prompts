@@ -1,0 +1,67 @@
+{
+  "discipline": "Bioinformatics Tool Selection and Evaluation",
+  "description": "Bioinformatics tools encompass software, algorithms, and databases that facilitate biological data analysis across diverse research areas. The selection of appropriate tools is a critical decision in bioinformatics workflows, requiring careful evaluation of tool capabilities, limitations, computational requirements, and suitability for specific research questions. This evaluation process involves understanding the principles, algorithms, input/output formats, and validation approaches to ensure reliable and reproducible results.",
+  "key_concepts": [
+    "Tool evaluation criteria (accuracy, speed, resource requirements, maintenance)",
+    "Usability spectrum (command-line, web interfaces, programmable APIs)",
+    "Validation approaches and benchmarking strategies",
+    "Containerization and environment management",
+    "Interoperability and data format compatibility",
+    "Version control and reproducibility considerations",
+    "Resource scaling and high-performance computing integration",
+    "Tool documentation and community support"
+  ],
+  "common_tools": [
+    "Bioconda - Package management system for bioinformatics",
+    "Galaxy - Web-based platform for accessible bioinformatics",
+    "Docker/Singularity - Container platforms for tool deployment",
+    "Conda/Mamba - Environment management systems",
+    "Bioconductor - R packages for bioinformatics",
+    "Biopython/Bioperl - Programming toolkits for biological computation",
+    "CyVerse/Terra - Cloud platforms for bioinformatics analysis"
+  ],
+  "common_file_formats": [
+    {
+      "name": "YAML/JSON",
+      "description": "Tool configuration and metadata formats"
+    },
+    {
+      "name": "Dockerfile/Singularity",
+      "description": "Container definition files"
+    },
+    {
+      "name": "environment.yml",
+      "description": "Conda environment specifications"
+    },
+    {
+      "name": "requirements.txt",
+      "description": "Python dependency specifications"
+    },
+    {
+      "name": "CWL/WDL/Nextflow",
+      "description": "Workflow definition files referencing tools"
+    },
+    {
+      "name": "XML",
+      "description": "Tool definitions in Galaxy and other systems"
+    }
+  ],
+  "examples": [
+    {
+      "query": "How do I evaluate and select the most appropriate variant calling tools for my whole genome sequencing project?",
+      "context": "The user is planning a human whole genome sequencing study focused on rare disease diagnosis and needs to choose variant calling tools.",
+      "response": "\n# Evaluating Variant Calling Tools for Whole Genome Sequencing\n\n## Conceptual Framework\n\nSelecting variant callers for WGS analysis requires evaluating tools across multiple dimensions:\n\n1. **Variant type coverage**: SNVs, indels, structural variants, copy number\n2. **Performance characteristics**: Sensitivity, specificity, computational demands\n3. **Use case alignment**: Research, clinical, or population applications\n4. **Integration potential**: With existing pipelines and downstream tools\n\n## Decision Framework\n\n### Project Requirement Assessment\n- **Study objectives**: Research discovery vs. clinical diagnosis vs. population screening\n- **Variant classes of interest**: \n  - Simple variants (SNVs/indels)\n  - Structural variants (deletions, duplications, inversions)\n  - Copy number variants\n  - Mobile element insertions\n- **Sequencing characteristics**:\n  - Coverage depth (30x, 60x, etc.)\n  - Read length and sequencing technology (short vs. long reads)\n  - Library preparation method\n- **Computational constraints**:\n  - Available compute resources\n  - Time constraints\n  - Scalability requirements (single vs. many samples)\n\n### Tool Category Selection\n- **Comprehensive callers**:\n  - GATK HaplotypeCaller: Gold standard with high specificity\n  - DeepVariant: Neural network-based with high accuracy\n  - Strelka2: Fast and accurate for germline variants\n- **Structural variant callers**:\n  - Manta: Balanced speed and sensitivity\n  - DELLY: High sensitivity for deletions\n  - GRIDSS: Assembly-based for complex events\n- **Copy number variant callers**:\n  - CNVnator: Read-depth based detection\n  - Canvas: Combines multiple signals\n  - FALCON: Long-read phased SV detection\n- **Multi-algorithm approaches**:\n  - Consensus calling (GATK+Strelka2+DeepVariant)\n  - Ensemble methods (Parliament2, SV-Callers)\n\n### Evaluation Criteria\n- **Accuracy metrics**:\n  - Sensitivity/recall: Proportion of true variants detected\n  - Precision: Proportion of calls that are true variants\n  - F1 score: Harmonic mean of precision and recall\n  - False discovery rate: Proportion of false calls\n- **Computational metrics**:\n  - Runtime on standard datasets\n  - Memory requirements\n  - Parallelization capabilities\n  - Cloud compatibility\n- **Practical considerations**:\n  - Ease of installation and configuration\n  - Quality of documentation\n  - Active maintenance and community support\n  - Compatibility with downstream tools (VEP, ANNOVAR)\n\n### Benchmarking Strategy\n- **Truth sets comparison**:\n  - Genome in a Bottle (GIAB) for standard benchmarking\n  - Synthetic benchmarks (Bam Surgeon, NEAT)\n  - Family-based validation (inheritance pattern checking)\n- **Validation approaches**:\n  - Orthogonal technologies (arrays, targeted sequencing)\n  - Technical replicates consistency\n  - Cross-tool concordance analysis\n\n## Implementation Considerations\n\n- **Start with established pipelines**:\n  - Consider nf-core/sarek or GATK best practices as foundations\n  - Adapt based on specific project needs\n- **Variant classification strategies**:\n  - Filter based on quality metrics specific to each tool\n  - Apply tool-specific recommended filtering thresholds\n  - Consider joint filtering across multiple tools for consensus calls\n- **Validation strategy**:\n  - Confirm subset of variants with orthogonal methods\n  - Check inheritance patterns in family studies\n  - Compare performance on known benchmarking datasets\n\n## Useful Resources\n\n- [Genome in a Bottle Consortium](https://www.nist.gov/programs-projects/genome-bottle)\n- [GA4GH Benchmarking Framework](https://github.com/ga4gh/benchmarking-tools)\n- [nf-core/sarek pipeline](https://nf-co.re/sarek)\n- [GATK Best Practices](https://gatk.broadinstitute.org/hc/en-us/articles/360035894711)\n- [PrecisionFDA Truth Challenges](https://precision.fda.gov/challenges)\n"
+    },
+    {
+      "query": "How should I approach tool selection for multi-omics data integration in a cancer research project?",
+      "context": "The user has RNA-seq, whole-genome sequencing, and proteomics data from cancer patients and wants to integrate these datasets.",
+      "response": "\n# Tool Selection for Multi-Omics Cancer Data Integration\n\n## Conceptual Framework\n\nMulti-omics integration requires tools that can:\n1. **Handle heterogeneous data types**: Genomic, transcriptomic, proteomic\n2. **Address different scales and distributions**: Across various measurement technologies\n3. **Implement appropriate integration strategies**: Early, intermediate, or late integration\n4. **Provide interpretable outputs**: For biological insight extraction\n\n## Decision Framework\n\n### Integration Strategy Selection\n- **Integration level**:\n  - **Early integration**: Combine raw or processed data before analysis\n    - Higher information retention but higher dimensionality challenges\n  - **Intermediate integration**: Transform each dataset then integrate\n    - Balances information and dimensionality\n  - **Late integration**: Analyze each dataset separately, then combine results\n    - Simpler but may miss cross-omics interactions\n- **Analysis objective**:\n  - Patient stratification and subtyping\n  - Biomarker discovery\n  - Regulatory network reconstruction\n  - Causal mechanism identification\n\n### Tool Category Selection\n\n#### Data Preprocessing Tools\n- **Quality control and normalization**:\n  - RNAseq: MultiQC, DESeq2 normalization\n  - WGS: FastQC, Picard metrics\n  - Proteomics: MaxQuant, MSstats\n- **Batch effect correction**:\n  - ComBat/ComBat-seq: Parametric adjustment\n  - Harmony: Fast integration via soft clustering\n  - PEER: Factor analysis for hidden confounders\n\n#### Integration Approaches\n- **Matrix factorization methods**:\n  - iCluster+/iClusterPlus: Joint clustering across omics\n  - MOFA/MOFA+: Factor analysis for multi-omics\n  - NMF-based methods: Identification of metagenes\n- **Network-based methods**:\n  - SNF (Similarity Network Fusion): Patient similarity networks\n  - mixOmics: Sparse multi-omics integration\n  - DIABLO: Discriminant analysis integration\n- **Deep learning approaches**:\n  - MOMA: Multi-omics autoencoder\n  - OmiEmbed: Representation learning for integration\n  - VAEs for multi-modal data integration\n\n#### Visualization and Interpretation\n- **Multi-omics visualization**:\n  - mixOmics: Correlation circle plots\n  - Clustergrammer: Interactive heatmaps\n  - omicsCIR: Circular visualizations for integration\n- **Pathway analysis**:\n  - PathwayPCA: Pathway analysis on multi-omics\n  - ReactomeGSA: Multi-omics pathway analysis\n  - OmicsAnalyst: Visual analytics for integration\n\n### Tool Evaluation Criteria\n- **Data type compatibility**:\n  - Supported omics data types\n  - Required data formats and preprocessing\n  - Missing data handling capabilities\n- **Statistical approach**:\n  - Underlying mathematical framework\n  - Assumptions about data distributions\n  - Ability to handle high-dimensional, sparse data\n- **Computational considerations**:\n  - Scalability to large cohorts\n  - Memory and runtime requirements\n  - GPU acceleration availability\n- **Biological interpretability**:\n  - Connection to known pathways and mechanisms\n  - Visualization capabilities\n  - Integration with knowledge bases\n\n### Practical Implementation Decisions\n- **Data harmonization approach**:\n  - Feature matching across platforms\n  - Sample alignment and missing data handling\n  - Batch effect identification and correction\n- **Feature selection strategy**:\n  - Biology-driven vs. data-driven selection\n  - Variance-based filtering per omics layer\n  - Cross-omics correlation filtering\n- **Validation strategy**:\n  - Cross-validation schemes appropriate for multi-omics\n  - Independent cohort validation\n  - Functional validation of findings\n\n## Key Considerations\n\n- **Start simple**: Begin with pairwise integration before full multi-omics\n- **Biological knowledge**: Incorporate pathway information to guide integration\n- **Iterative approach**: Refine integration as insights emerge\n- **Benchmarking**: Compare multiple tools on subsets of data\n- **Interpretability**: Prioritize methods that produce biologically actionable results\n\n## Useful Resources\n\n- [Multi-Omics Factor Analysis (MOFA)](https://github.com/bioFAM/MOFA2)\n- [mixOmics R package](https://mixomics.org/)\n- [Similarity Network Fusion](http://compbio.cs.toronto.edu/SNF/)\n- [OmicsCIR](https://omicscir.elixir-luxembourg.org/)\n- [OmicsAnalyst](https://www.omicsanalyst.ca/)\n- [Multi-Omics Benchmarking](https://doi.org/10.1186/s13059-020-02032-0)\n"
+    }
+  ],
+  "references": [
+    "Nunes M, et al. (2022). Benchmarking of structural variant calling tools. Bioinformatics, 38(5), 1252-1259.",
+    "Cantini L, et al. (2021). Benchmarking joint multi-omics dimensionality reduction approaches for the study of cancer. Nature Communications, 12(1), 124.",
+    "Mangul S, et al. (2019). Systematic benchmarking of omics computational tools. Nature Communications, 10(1), 1393.",
+    "Ye Y, et al. (2021). A comprehensive survey of omics data resources for human diseases. Briefings in Bioinformatics, 22(6)."
+  ]
+}

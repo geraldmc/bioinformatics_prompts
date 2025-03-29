@@ -566,5 +566,12 @@ if __name__ == "__main__":
     print(prompt)
     
     # Save prompt template to JSON
-    with open("sequence_analysis_prompt.json", "w") as f:
+    with open("../sequence_analysis_prompt.json", "w") as f:
         f.write(sequence_analysis_prompt.to_json())
+
+   # Load prompt template from JSON
+    with open("../sequence_analysis_prompt.json", "r") as f:
+        loaded_prompt = BioinformaticsPrompt.from_json(f.read())
+    
+    # Verify it works the same
+    assert loaded_prompt.generate_prompt(user_query) == prompt
