@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # add project root to sys.path
 
-from templates.prompt_template import BioinformaticsPrompt, FewShotExample
+from prompt.templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a genomics prompt template
 genomics_prompt = BioinformaticsPrompt(

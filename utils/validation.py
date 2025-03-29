@@ -6,7 +6,7 @@ import json
 from typing import List, Dict, Optional, Union
 from pathlib import Path
 
-from templates.prompt_template import BioinformaticsPrompt
+from prompt.templates.prompt_template import BioinformaticsPrompt
 
 
 def validate_prompt(prompt: BioinformaticsPrompt) -> Dict[str, Union[bool, List[str]]]:
@@ -119,7 +119,7 @@ def export_all_prompts(prompts_dict: Dict[str, BioinformaticsPrompt], output_dir
 
 if __name__ == "__main__":
     # FewShotExample usage
-    from prompt.prompt_genomics import genomics_prompt
+    from prompt.genomics import genomics_prompt
     
     # Validate a single prompt
     validation_result = validate_prompt(genomics_prompt)
