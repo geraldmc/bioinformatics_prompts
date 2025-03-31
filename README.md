@@ -4,9 +4,9 @@ A Python package for generating and using bioinformatics-specific prompts with A
 
 ## Overview
 
-This package provides a structured framework for creating, validating, and utilizing domain-specific prompts for bioinformatics research. It helps researchers generate more focused and effective interactions with Large Language Models like Claude by providing context-rich templates with key concepts, tools, file formats, and examples relevant to specific bioinformatics subfields.
+This package provides a framework for creating, validating, and utilizing domain-specific prompts for bioinformatics research. It helps researchers generate more focused and effective interactions with Large Language Models like Claude by providing context-rich templates with key concepts, tools, file formats, and examples relevant to specific bioinformatics subfields.
 
-The package follows the OPTIMAL model (Optimization of Prompts Through Iterative Mentoring and Assessment with an LLM chatbot) described in the paper "Empowering beginners in bioinformatics with ChatGPT" by Shue et al.
+The package follows the OPTIMAL model (Optimization of Prompts Through Iterative Mentoring and Assessment with an LLM chatbot) described in the paper "Empowering beginners in bioinformatics with ChatGPT" by [Shue et al.](https://pmc.ncbi.nlm.nih.gov/articles/PMC10299548/)
 
 ## Features
 
@@ -75,7 +75,7 @@ bioinformatics-prompts/
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/bioinformatics-prompts.git
+git clone https://github.com/geraldmc/bioinformatics-prompts.git
 cd bioinformatics-prompts
 
 # Create a virtual environment (optional but recommended)
@@ -102,11 +102,11 @@ interaction = ClaudeInteraction()
 interaction.start_conversation()
 ```
 
-This will start a terminal-based conversation where you can:
+This will start a terminal-based conversation where you may:
 - Select a bioinformatics topic template
 - Ask questions within that domain
 - Get contextually-aware responses from Claude
-- Switch templates or reset conversations as needed
+- Switch templates or reset the conversation as needed
 
 ### Programmatic Usage
 
@@ -140,7 +140,7 @@ from prompt.templates.prompt_template import BioinformaticsPrompt, FewShotExampl
 
 # Create a custom prompt template
 custom_prompt = BioinformaticsPrompt(
-    research_area="Your Bioinformatics Area",
+    research_area="The bioinformatics research area of interest",
     description="Description of your area...",
     key_concepts=["Concept 1", "Concept 2"],
     common_tools=["Tool 1", "Tool 2"],
@@ -151,7 +151,7 @@ custom_prompt = BioinformaticsPrompt(
         FewShotExample(
             query="Example question?",
             context="Context for the example",
-            response="Detailed response with code examples..."
+            response="Detailed response with examples..."
         )
     ],
     references=["Reference 1", "Reference 2"]
@@ -176,20 +176,20 @@ print(validation_result)
 
 The package includes pre-built templates for various bioinformatics research areas:
 
-- **Genomics**: DNA sequencing, assembly, variant calling
-- **NGS Sequencing Analysis**: Next-generation sequencing data processing
-- **Sequence Analysis**: Alignments, motif finding, phylogenetics
-- **Single-Cell Genomics**: Single-cell RNA-seq and multi-omics analysis
-- **Metagenomics**: Microbial community analysis
-- **Epigenomics**: DNA methylation, histone modifications, chromatin structure
-- **GWAS**: Genome-wide association studies
-- **Precision Medicine**: Clinical genomics and personalized healthcare
 - **Artificial Intelligence in Bioinformatics**: ML/DL for biological data
-- **Workflow Automation**: Pipeline design and optimization
-- **Synthetic Biology**: Genetic circuit and metabolic pathway engineering
-- **Data Standardization**: FAIR principles and bioinformatics data management
 - **Bioinformatics Tool Selection**: Evaluation and selection of appropriate tools
 - **Blockchain in Bioinformatics**: Blockchain applications for biological data
+- **Data Standardization**: FAIR principles and bioinformatics data management
+- **Epigenomics**: DNA methylation, histone modifications, chromatin structure
+- **Genomics**: DNA sequencing, assembly, variant calling
+- **GWAS**: Genome-wide association studies
+- **Metagenomics**: Microbial community analysis
+- **NGS Sequencing Analysis**: Next-generation sequencing data processing
+- **Precision Medicine**: Clinical genomics and personalized healthcare
+- **Sequence Analysis**: Alignments, motif finding, phylogenetics
+- **Single-Cell Genomics**: Single-cell RNA-seq and multi-omics analysis
+- **Synthetic Biology**: Genetic circuit and metabolic pathway engineering
+- **Workflow Automation**: Pipeline design and optimization
 
 ## Environment Variables
 
