@@ -1,5 +1,5 @@
 {
-  "discipline": "Sequence Analysis",
+  "research_area": "Sequence Analysis",
   "description": "Sequence analysis is a fundamental aspect of bioinformatics that involves the examination of DNA, RNA, or protein sequences to derive meaningful biological information. It encompasses a wide range of techniques, including sequence alignment, motif discovery, sequence assembly, variant detection, and phylogenetic analysis. With the evolution of sequencing technologies from short to long reads, the computational methods for sequence analysis continue to adapt to provide more comprehensive insights into genomic data.",
   "key_concepts": [
     "Global and local sequence alignment",

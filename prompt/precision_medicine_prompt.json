@@ -1,5 +1,5 @@
 {
-  "discipline": "Precision Medicine",
+  "research_area": "Precision Medicine",
   "description": "Precision medicine utilizes molecular profiling, clinical data, and advanced analytics to tailor healthcare interventions to individual patients or patient subgroups. Bioinformatics plays a central role in integrating diverse data types\u2014genomic, transcriptomic, proteomic, metabolomic, and clinical\u2014to derive actionable insights for personalized diagnosis, prognosis, and treatment selection. This field has transformed cancer care through molecular subtyping and targeted therapy selection, and is expanding into other disease areas including rare genetic disorders, complex chronic conditions, and infectious diseases, ultimately aiming to optimize treatment outcomes while minimizing adverse effects through individualized approaches.",
   "key_concepts": [
     "Molecular profiling and biomarker identification",

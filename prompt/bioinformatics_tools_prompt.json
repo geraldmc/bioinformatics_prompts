@@ -1,5 +1,5 @@
 {
-  "discipline": "Bioinformatics Tool Selection and Evaluation",
+  "research_area": "Bioinformatics Tool Selection and Evaluation",
   "description": "Bioinformatics tools encompass software, algorithms, and databases that facilitate biological data analysis across diverse research areas. The selection of appropriate tools is a critical decision in bioinformatics workflows, requiring careful evaluation of tool capabilities, limitations, computational requirements, and suitability for specific research questions. This evaluation process involves understanding the principles, algorithms, input/output formats, and validation approaches to ensure reliable and reproducible results.",
   "key_concepts": [
     "Tool evaluation criteria (accuracy, speed, resource requirements, maintenance)",

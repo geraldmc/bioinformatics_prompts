@@ -6,7 +6,7 @@ from templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a data standardization prompt template
 data_standardization_prompt = BioinformaticsPrompt(
-    discipline="Bioinformatics Data Standardization and Interoperability",
+    research_area="Bioinformatics Data Standardization and Interoperability",
     description=(
         "Data standardization and interoperability in bioinformatics enable effective sharing, integration, "
         "and reuse of biological data across research communities. As high-throughput technologies generate "

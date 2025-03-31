@@ -1,5 +1,5 @@
 {
-  "discipline": "Genome-Wide Association Studies",
+  "research_area": "Genome-Wide Association Studies",
   "description": "Genome-Wide Association Studies (GWAS) identify statistical associations between genetic variants and traits or diseases across the genome. Modern GWAS approaches have evolved beyond simple association testing to incorporate functional genomics, machine learning, and polygenic risk modeling. These advanced methods help researchers address challenges such as multiple testing correction, population stratification, and the biological interpretation of identified variants. By integrating diverse data types and sophisticated analytical approaches, GWAS can provide insights into the genetic architecture of complex traits and contribute to precision medicine initiatives.",
   "key_concepts": [
     "Single nucleotide polymorphisms (SNPs) and genetic variation",

@@ -7,7 +7,7 @@ A package for generating and using bioinformatics-specific prompts with Anthropi
 This package provides a structured framework for creating, validating, and utilizing domain-specific prompts for bioinformatics research. It helps researchers generate more focused and effective interactions with Large Language Models like Claude.
 
 The package includes:
-- Template structures for different bioinformatics disciplines
+- Template structures for different bioinformatics research_areas
 - Few-shot examples to guide LLM responses
 - Validation utilities to ensure prompt quality
 - Integration with Anthropic's API for seamless interactions
@@ -69,7 +69,7 @@ from templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a genomics prompt template
 genomics_prompt = BioinformaticsPrompt(
-    discipline="Genomics",
+    research_area="Genomics",
     description="Description of genomics...",
     key_concepts=["Concept 1", "Concept 2"],
     common_tools=["Tool 1", "Tool 2"],
@@ -126,7 +126,7 @@ print(response)
 
 ## Pre-built Templates
 
-The package includes pre-built templates for various bioinformatics disciplines:
+The package includes pre-built templates for various bioinformatics research_areas:
 
 - **Genomics**: DNA sequencing, assembly, variant calling, etc.
 - **Proteomics**: Protein identification, quantification, and analysis
@@ -139,7 +139,7 @@ The package includes pre-built templates for various bioinformatics disciplines:
 
 To create a custom template:
 
-1. Define your discipline-specific details (tools, concepts, file formats)
+1. Define your research_area-specific details (tools, concepts, file formats)
 2. Create few-shot examples with representative queries and responses
 3. Use the `BioinformaticsPrompt` class to structure your template
 4. Validate your template using the validation utilities

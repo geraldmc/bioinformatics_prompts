@@ -1,5 +1,5 @@
 {
-  "discipline": "Bioinformatics Data Standardization and Interoperability",
+  "research_area": "Bioinformatics Data Standardization and Interoperability",
   "description": "Data standardization and interoperability in bioinformatics enable effective sharing, integration, and reuse of biological data across research communities. As high-throughput technologies generate increasingly diverse and voluminous datasets, adherence to community standards and FAIR principles (Findable, Accessible, Interoperable, Reusable) becomes critical for collaborative research, reproducibility, and knowledge discovery. Standardization spans data formats, metadata schemas, vocabularies, and exchange protocols, creating an ecosystem where datasets can seamlessly flow between repositories, analysis platforms, and visualization tools.",
   "key_concepts": [
     "FAIR data principles and implementation strategies",

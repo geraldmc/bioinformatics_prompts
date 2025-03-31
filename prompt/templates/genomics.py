@@ -6,7 +6,7 @@ from templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a genomics prompt template
 genomics_prompt = BioinformaticsPrompt(
-    discipline="Genomics",
+    research_area="Genomics",
     description=(
         "Genomics is the study of the complete set of DNA (including all genes) in an organism. "
         "It involves the sequencing, assembly, annotation, and analysis of genomes to understand "

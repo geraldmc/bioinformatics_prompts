@@ -1,5 +1,5 @@
 {
-  "discipline": "Metagenomics",
+  "research_area": "Metagenomics",
   "description": "Metagenomics is the study of genetic material recovered directly from environmental samples. It enables the analysis of microbial communities without the need for culturing individual species. This field has expanded rapidly with advances in high-throughput sequencing technologies, allowing researchers to study complex microbiomes and their roles in environmental and health contexts.",
   "key_concepts": [
     "Microbial community profiling (taxonomic classification)",

@@ -1,4 +1,4 @@
-"""Module containing the sequence analysis discipline prompt template."""
+"""Module containing the sequence analysis research_area prompt template."""
 
 import sys
 import os
@@ -8,7 +8,7 @@ from templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a sequence analysis prompt template
 sequence_analysis_prompt = BioinformaticsPrompt(
-    discipline="Sequence Analysis",
+    research_area="Sequence Analysis",
     description=(
         "Sequence analysis is a fundamental aspect of bioinformatics that involves the examination of DNA, RNA, or protein "
         "sequences to derive meaningful biological information. It encompasses a wide range of techniques, including sequence "

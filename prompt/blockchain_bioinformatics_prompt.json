@@ -1,5 +1,5 @@
 {
-  "discipline": "Blockchain Technology in Bioinformatics",
+  "research_area": "Blockchain Technology in Bioinformatics",
   "description": "Blockchain technology offers novel approaches to address critical challenges in bioinformatics data management, including security, privacy, provenance tracking, and controlled sharing. By providing immutable, transparent, and decentralized ledgers, blockchain can enhance data integrity, enable fine-grained access control, and create auditable trails of data usage. These capabilities are particularly valuable for sensitive genomic data, collaborative research platforms, and clinical data integration where trust, privacy, and regulatory compliance are paramount concerns. As bioinformatics increasingly deals with large-scale, multi-institutional datasets, blockchain offers frameworks for balancing openness with security and individual privacy with research utility.",
   "key_concepts": [
     "Distributed ledger technology for biological data",

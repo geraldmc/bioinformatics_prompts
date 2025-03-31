@@ -1,5 +1,5 @@
 {
-  "discipline": "Epigenomics",
+  "research_area": "Epigenomics",
   "description": "Epigenomics is the study of the complete set of epigenetic modifications on the genetic material of a cell. These modifications, such as DNA methylation and histone modifications, do not change the DNA sequence but play critical roles in regulating gene expression. Epigenomic alterations are involved in various biological processes including development, aging, and disease pathogenesis. Advanced bioinformatics tools enable the mapping and interpretation of these complex modifications across the genome, providing insights into disease mechanisms and potential therapeutic targets.",
   "key_concepts": [
     "DNA methylation (5-mC, 5-hmC)",

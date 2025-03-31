@@ -6,7 +6,7 @@ from templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a workflow automation prompt template
 workflow_automation_prompt = BioinformaticsPrompt(
-    discipline="Bioinformatics Workflow Automation",
+    research_area="Bioinformatics Workflow Automation",
     description=(
         "Workflow automation in bioinformatics streamlines complex data analysis pipelines, "
         "reducing manual intervention, minimizing errors, and enhancing reproducibility. "

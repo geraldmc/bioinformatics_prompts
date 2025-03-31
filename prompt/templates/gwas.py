@@ -1,4 +1,4 @@
-"""Module containing the GWAS discipline prompt template."""
+"""Module containing the GWAS research_area prompt template."""
 
 import sys
 import os
@@ -8,7 +8,7 @@ from templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a GWAS prompt template
 gwas_prompt = BioinformaticsPrompt(
-    discipline="Genome-Wide Association Studies",
+    research_area="Genome-Wide Association Studies",
     description=(
         "Genome-Wide Association Studies (GWAS) identify statistical associations between genetic variants and traits or diseases "
         "across the genome. Modern GWAS approaches have evolved beyond simple association testing to incorporate functional genomics, "

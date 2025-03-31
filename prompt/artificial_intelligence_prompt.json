@@ -1,5 +1,5 @@
 {
-  "discipline": "Artificial Intelligence in Bioinformatics",
+  "research_area": "Artificial Intelligence in Bioinformatics",
   "description": "Artificial intelligence (AI) is transforming bioinformatics by providing powerful computational methods for analyzing complex biological data. Machine learning and deep learning approaches enable researchers to extract patterns, make predictions, and gain insights from diverse biological datasets, including genomic sequences, protein structures, and clinical information. The integration of AI with bioinformatics is accelerating discovery in areas such as drug development, disease diagnosis, and personalized medicine, opening new avenues for understanding biological systems.",
   "key_concepts": [
     "Supervised learning (classification, regression)",

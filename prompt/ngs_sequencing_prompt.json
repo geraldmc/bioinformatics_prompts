@@ -1,5 +1,5 @@
 {
-  "discipline": "Next-Generation Sequencing Analysis",
+  "research_area": "Next-Generation Sequencing Analysis",
   "description": "Next-Generation Sequencing (NGS) analysis encompasses the computational methods and frameworks used to process, analyze, and interpret high-throughput sequencing data. Modern NGS platforms generate massive volumes of short or long reads that require specialized bioinformatics approaches for quality control, alignment, assembly, variant detection, and functional interpretation. As sequencing technologies continue to evolve\u2014from short-read technologies like Illumina to long-read platforms such as Oxford Nanopore and PacBio\u2014bioinformatics pipelines must adapt to different error profiles, read lengths, and applications ranging from whole genome sequencing to targeted panels, transcriptomics, and epigenomics.",
   "key_concepts": [
     "Sequencing platform selection and technology tradeoffs",

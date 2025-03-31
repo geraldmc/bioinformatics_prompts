@@ -6,7 +6,7 @@ from templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a blockchain in bioinformatics prompt template
 blockchain_bioinformatics_prompt = BioinformaticsPrompt(
-    discipline="Blockchain Technology in Bioinformatics",
+    research_area="Blockchain Technology in Bioinformatics",
     description=(
         "Blockchain technology offers novel approaches to address critical challenges in bioinformatics data "
         "management, including security, privacy, provenance tracking, and controlled sharing. By providing "

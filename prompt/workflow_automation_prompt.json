@@ -1,5 +1,5 @@
 {
-  "discipline": "Bioinformatics Workflow Automation",
+  "research_area": "Bioinformatics Workflow Automation",
   "description": "Workflow automation in bioinformatics streamlines complex data analysis pipelines, reducing manual intervention, minimizing errors, and enhancing reproducibility. Modern workflow systems allow researchers to focus on experimental design and result interpretation rather than computational implementation details. These systems orchestrate complex analyses across computing environments, track data provenance, and facilitate collaboration through well-defined, shareable pipeline definitions.",
   "key_concepts": [
     "Workflow definition languages (WDL, CWL, Nextflow DSL)",

@@ -1,5 +1,5 @@
 {
-  "discipline": "Single-Cell Genomics",
+  "research_area": "Single-Cell Genomics",
   "description": "Single-cell genomics examines the genetic and transcriptomic profiles of individual cells, revealing cellular heterogeneity masked in bulk analyses. These techniques enable researchers to identify rare cell populations, trace developmental trajectories, and understand cell-to-cell variability in complex tissues and disease states. By profiling thousands to millions of cells simultaneously, single-cell approaches provide unprecedented resolution into cellular diversity, lineage relationships, and dynamic biological processes.",
   "key_concepts": [
     "Cellular heterogeneity and rare cell type identification",

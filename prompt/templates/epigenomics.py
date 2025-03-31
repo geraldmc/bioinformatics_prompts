@@ -1,4 +1,4 @@
-"""Module containing the epigenomics discipline prompt template."""
+"""Module containing the epigenomics research_area prompt template."""
 
 import sys
 import os
@@ -8,7 +8,7 @@ from templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create an epigenomics prompt template
 epigenomics_prompt = BioinformaticsPrompt(
-    discipline="Epigenomics",
+    research_area="Epigenomics",
     description=(
         "Epigenomics is the study of the complete set of epigenetic modifications on the genetic material of a cell. "
         "These modifications, such as DNA methylation and histone modifications, do not change the DNA sequence "

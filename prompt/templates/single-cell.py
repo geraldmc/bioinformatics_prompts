@@ -6,7 +6,7 @@ from templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a single-cell genomics prompt template
 single_cell_genomics_prompt = BioinformaticsPrompt(
-    discipline="Single-Cell Genomics",
+    research_area="Single-Cell Genomics",
     description=(
         "Single-cell genomics examines the genetic and transcriptomic profiles of individual cells, "
         "revealing cellular heterogeneity masked in bulk analyses. These techniques enable researchers "

@@ -45,7 +45,7 @@ class ClaudeInteraction:
         """
         # Create a simplified version of the template for the system prompt
         system_prompt = [
-            f"# {prompt_template.discipline} Research Context\n",
+            f"# {prompt_template.research_area} Research Context\n",
             f"{prompt_template.description}\n",
             "## Key Concepts\n"
         ]

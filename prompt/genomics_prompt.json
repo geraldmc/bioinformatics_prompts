@@ -1,5 +1,5 @@
 {
-  "discipline": "Genomics",
+  "research_area": "Genomics",
   "description": "Genomics is the study of the complete set of DNA (including all genes) in an organism. It involves the sequencing, assembly, annotation, and analysis of genomes to understand genetic variation, gene function, and evolutionary relationships.",
   "key_concepts": [
     "DNA sequencing technologies (short-read, long-read)",

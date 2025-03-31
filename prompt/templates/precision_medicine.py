@@ -6,7 +6,7 @@ from templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a precision medicine prompt template
 precision_medicine_prompt = BioinformaticsPrompt(
-    discipline="Precision Medicine",
+    research_area="Precision Medicine",
     description=(
         "Precision medicine utilizes molecular profiling, clinical data, and advanced analytics to tailor "
         "healthcare interventions to individual patients or patient subgroups. Bioinformatics plays a central "

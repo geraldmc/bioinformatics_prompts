@@ -1,5 +1,5 @@
 {
-  "discipline": "Synthetic Biology",
+  "research_area": "Synthetic Biology",
   "description": "Synthetic biology integrates biology, engineering, and computational approaches to design, model, and construct novel biological systems. This field applies engineering principles to biology, developing standardized genetic parts and circuits with predictable functions. Bioinformatics in synthetic biology supports genetic circuit design, protein engineering, metabolic pathway optimization, and whole-genome design, enabling both bottom-up construction of synthetic systems and top-down redesign of existing organisms for applications in medicine, biomanufacturing, agriculture, and environmental remediation.",
   "key_concepts": [
     "Genetic circuit design and modeling",

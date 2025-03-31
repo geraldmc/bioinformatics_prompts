@@ -6,7 +6,7 @@ from templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create an NGS sequencing prompt template
 ngs_sequencing_prompt = BioinformaticsPrompt(
-    discipline="Next-Generation Sequencing Analysis",
+    research_area="Next-Generation Sequencing Analysis",
     description=(
         "Next-Generation Sequencing (NGS) analysis encompasses the computational methods and frameworks "
         "used to process, analyze, and interpret high-throughput sequencing data. Modern NGS platforms "

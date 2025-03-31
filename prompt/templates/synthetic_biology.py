@@ -6,7 +6,7 @@ from templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a synthetic biology prompt template
 synthetic_biology_prompt = BioinformaticsPrompt(
-    discipline="Synthetic Biology",
+    research_area="Synthetic Biology",
     description=(
         "Synthetic biology integrates biology, engineering, and computational approaches to design, "
         "model, and construct novel biological systems. This field applies engineering principles to "

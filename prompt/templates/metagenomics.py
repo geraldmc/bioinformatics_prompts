@@ -1,4 +1,4 @@
-"""Module containing the metagenomics discipline prompt template."""
+"""Module containing the metagenomics research_area prompt template."""
 
 import sys
 import os
@@ -8,7 +8,7 @@ from templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a metagenomics prompt template
 metagenomics_prompt = BioinformaticsPrompt(
-    discipline="Metagenomics",
+    research_area="Metagenomics",
     description=(
         "Metagenomics is the study of genetic material recovered directly from environmental samples. "
         "It enables the analysis of microbial communities without the need for culturing individual species. "

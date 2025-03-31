@@ -20,7 +20,7 @@ class BioinformaticsPrompt:
     
     def __init__(
         self,
-        discipline: str,
+        research_area: str,
         description: str,
         key_concepts: List[str],
         common_tools: List[str],
@@ -32,7 +32,7 @@ class BioinformaticsPrompt:
         Initialize a bioinformatics prompt template.
         
         Args:
-            discipline: Name of the research area
+            research_area: Name of the research area
             description: Brief description of the research area
             key_concepts: List of key concepts in this area
             common_tools: List of common tools used in this area
@@ -40,7 +40,7 @@ class BioinformaticsPrompt:
             examples: List of few-shot examples
             references: Optional list of references
         """
-        self.discipline = discipline
+        self.research_area = research_area
         self.description = description
         self.key_concepts = key_concepts
         self.common_tools = common_tools
@@ -59,7 +59,7 @@ class BioinformaticsPrompt:
             A formatted prompt string
         """
         prompt = [
-            f"# {self.discipline} Research Context\n",
+            f"# {self.research_area} Research Context\n",
             f"{self.description}\n",
             "## Key Concepts\n"
         ]
@@ -94,7 +94,7 @@ class BioinformaticsPrompt:
         Returns: JSON representation of the prompt template
         """
         return json.dumps({
-            "discipline": self.discipline,
+            "research_area": self.research_area,
             "description": self.description,
             "key_concepts": self.key_concepts,
             "common_tools": self.common_tools,
@@ -127,7 +127,7 @@ class BioinformaticsPrompt:
         ]
         
         return cls(
-            discipline=data["discipline"],
+            research_area=data["research_area"],
             description=data["description"],
             key_concepts=data["key_concepts"],
             common_tools=data["common_tools"],

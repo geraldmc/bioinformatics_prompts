@@ -1,4 +1,4 @@
-"""Module containing the artificial intelligence discipline prompt template."""
+"""Module containing the artificial intelligence research_area prompt template."""
 
 import sys
 import os
@@ -8,7 +8,7 @@ from templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create an artificial intelligence prompt template
 artificial_intelligence_prompt = BioinformaticsPrompt(
-    discipline="Artificial Intelligence in Bioinformatics",
+    research_area="Artificial Intelligence in Bioinformatics",
     description=(
         "Artificial intelligence (AI) is transforming bioinformatics by providing powerful computational methods for analyzing complex "
         "biological data. Machine learning and deep learning approaches enable researchers to extract patterns, make predictions, and "

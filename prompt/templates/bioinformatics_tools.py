@@ -6,7 +6,7 @@ from templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a bioinformatics tools prompt template
 bioinformatics_tools_prompt = BioinformaticsPrompt(
-    discipline="Bioinformatics Tool Selection and Evaluation",
+    research_area="Bioinformatics Tool Selection and Evaluation",
     description=(
         "Bioinformatics tools encompass software, algorithms, and databases that facilitate biological data analysis "
         "across diverse research areas. The selection of appropriate tools is a critical decision in bioinformatics "
