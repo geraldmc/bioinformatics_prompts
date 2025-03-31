@@ -1,16 +1,22 @@
 # Bioinformatics Prompts
 
-A package for generating and using bioinformatics-specific prompts with Anthropic's Claude AI.
+A Python package for generating and using bioinformatics-specific prompts with Anthropic's Claude AI.
 
 ## Overview
 
-This package provides a structured framework for creating, validating, and utilizing domain-specific prompts for bioinformatics research. It helps researchers generate more focused and effective interactions with Large Language Models like Claude.
+This package provides a structured framework for creating, validating, and utilizing domain-specific prompts for bioinformatics research. It helps researchers generate more focused and effective interactions with Large Language Models like Claude by providing context-rich templates with key concepts, tools, file formats, and examples relevant to specific bioinformatics subfields.
 
-The package includes:
-- Template structures for different bioinformatics research_areas
+The package follows the OPTIMAL model (Optimization of Prompts Through Iterative Mentoring and Assessment with an LLM chatbot) described in the paper "Empowering beginners in bioinformatics with ChatGPT" by Shue et al.
+
+## Features
+
+- Structured templates for different bioinformatics research areas
 - Few-shot examples to guide LLM responses
 - Validation utilities to ensure prompt quality
-- Integration with Anthropic's API for seamless interactions
+- Seamless integration with Anthropic's Claude API
+- Interactive conversation mode
+- Template selection interface
+- JSON serialization for easy template sharing
 
 ## Project Structure
 
@@ -18,32 +24,51 @@ The package includes:
 bioinformatics-prompts/
 ├── prompt/                   # Prompt implementations
 │   ├── __init__.py
-│   └── artificial_intelligence_prompt.json
-│   └── bioinformatics_tools_prompt.json
-│   └── blockchain_bioinformatics_prompt.json
-│   └── data_standardization_prompt.json
-│   └── epigenomics_prompt.json
-│   └── genomics_prompt.json
-│   └── GWAS_prompt.json
-│   └── metagenomics_prompt.json
-│   └── ngs_sequencing_prompt.json
-│   └── precision_medicine_prompt.json
-│   └── sequence_analysis_prompt.json
-│   └── single_cell_genomics_prompt.json
-│   └── sythetic_biology_prompt.json
+│   ├── templates/            # Template definitions
+│   │   ├── __init__.py
+│   │   ├── ai.py
+│   │   ├── bioinformatics_tools.py
+│   │   ├── blockchain_bioinformatics.py
+│   │   ├── data_standardization.py
+│   │   ├── epigenomics.py
+│   │   ├── genomics.py
+│   │   ├── gwas.py
+│   │   ├── metagenomics.py
+│   │   ├── ngs_sequencing.py
+│   │   ├── precision_medicine.py
+│   │   ├── prompt_template.py  # Base template class
+│   │   ├── sequence_analysis.py
+│   │   ├── single-cell.py
+│   │   ├── synthetic_biology.py
+│   │   └── workflow_automation.py
+│   │
+│   ├── artificial_intelligence_prompt.json
+│   ├── bioinformatics_tools_prompt.json
+│   ├── blockchain_bioinformatics_prompt.json
+│   ├── data_standardization_prompt.json
+│   ├── epigenomics_prompt.json
+│   ├── genomics_prompt.json
+│   ├── gwas_prompt.json
+│   ├── metagenomics_prompt.json
+│   ├── ngs_sequencing_prompt.json
+│   ├── precision_medicine_prompt.json
+│   ├── sequence_analysis_prompt.json
+│   ├── single_cell_genomics_prompt.json
+│   ├── synthetic_biology_prompt.json
 │   └── workflow_automation_prompt.json
-├── templates/                # Base template classes
-│   ├── __init__.py
-│   └── prompt_template.py
-├── tests/                    # Test modules
+│
+├── tests/                    # Test modules (placeholder directory)
 │   └── __init__.py
+│
 ├── utils/                    # Utility functions
 │   ├── __init__.py
 │   ├── formatting.py
 │   ├── logging.py
 │   └── validation.py
+│
 ├── claude_interaction.py     # Claude API integration
-└── README.md
+├── requirements.txt          # Project dependencies
+└── README.md                 # This file
 ```
 
 ## Installation
@@ -53,97 +78,122 @@ bioinformatics-prompts/
 git clone https://github.com/yourusername/bioinformatics-prompts.git
 cd bioinformatics-prompts
 
-# Install dependencies using uv
-uv pip install -r requirements.txt
+# Create a virtual environment (optional but recommended)
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Or just...
+# Install dependencies
 pip install -r requirements.txt
 ```
 
 ## Usage
 
-### Creating a Prompt Template
+### Basic Usage with Interactive Mode
+
+The simplest way to use this package is through the interactive conversation mode:
 
 ```python
-from templates.prompt_template import BioinformaticsPrompt, FewShotExample
+from claude_interaction import ClaudeInteraction
 
-# Create a genomics prompt template
-genomics_prompt = BioinformaticsPrompt(
-    research_area="Genomics",
-    description="Description of genomics...",
+# Initialize (will use ANTHROPIC_API_KEY from environment variables)
+interaction = ClaudeInteraction()
+
+# Start interactive conversation with template selection
+interaction.start_conversation()
+```
+
+This will start a terminal-based conversation where you can:
+- Select a bioinformatics topic template
+- Ask questions within that domain
+- Get contextually-aware responses from Claude
+- Switch templates or reset conversations as needed
+
+### Programmatic Usage
+
+```python
+from claude_interaction import ClaudeInteraction
+
+# Initialize with API key
+api_key = "your_anthropic_api_key"  # or set as environment variable
+interaction = ClaudeInteraction(api_key=api_key)
+
+# Load a specific template
+interaction.load_prompt_template(interactive=False)  # Will load first available template
+
+# Or list and select from available templates
+templates = interaction.list_available_templates()
+for t in templates:
+    print(f"{t['id']}. {t['research_area']}")
+
+# Ask a question using the loaded template
+response = interaction.ask_claude(
+    "How do I identify SNPs in my bacterial genome?",
+    show_prompt=True  # Show the generated prompt for debugging
+)
+print(response)
+```
+
+### Creating a Custom Template
+
+```python
+from prompt.templates.prompt_template import BioinformaticsPrompt, FewShotExample
+
+# Create a custom prompt template
+custom_prompt = BioinformaticsPrompt(
+    research_area="Your Bioinformatics Area",
+    description="Description of your area...",
     key_concepts=["Concept 1", "Concept 2"],
     common_tools=["Tool 1", "Tool 2"],
     common_file_formats=[
-        {"name": "FASTQ", "description": "Raw sequencing reads with quality scores"}
+        {"name": "Format1", "description": "Description of format"}
     ],
     examples=[
         FewShotExample(
-            query="How do I identify SNPs?",
-            context="User has Illumina paired-end reads...",
+            query="Example question?",
+            context="Context for the example",
             response="Detailed response with code examples..."
         )
     ],
     references=["Reference 1", "Reference 2"]
 )
 
-# Save the template
-with open("my_prompt.json", "w") as f:
-    f.write(genomics_prompt.to_json())
+# Save the template for reuse
+with open("prompt/custom_prompt.json", "w") as f:
+    f.write(custom_prompt.to_json())
 ```
 
-### Validating a Prompt
+### Validating a Prompt Template
 
 ```python
 from utils.validation import validate_prompt
 
-validation_result = validate_prompt(genomics_prompt)
+# Validate your template
+validation_result = validate_prompt(custom_prompt)
 print(validation_result)
 ```
 
-### Using Prompts with Claude API
+## Available Prompt Templates
 
-```python
-import os
-from claude_interaction import ClaudeInteraction
+The package includes pre-built templates for various bioinformatics research areas:
 
-# Set up Claude interaction
-api_key = os.environ.get("ANTHROPIC_API_KEY")
-claude = ClaudeInteraction(api_key)
+- **Genomics**: DNA sequencing, assembly, variant calling
+- **NGS Sequencing Analysis**: Next-generation sequencing data processing
+- **Sequence Analysis**: Alignments, motif finding, phylogenetics
+- **Single-Cell Genomics**: Single-cell RNA-seq and multi-omics analysis
+- **Metagenomics**: Microbial community analysis
+- **Epigenomics**: DNA methylation, histone modifications, chromatin structure
+- **GWAS**: Genome-wide association studies
+- **Precision Medicine**: Clinical genomics and personalized healthcare
+- **Artificial Intelligence in Bioinformatics**: ML/DL for biological data
+- **Workflow Automation**: Pipeline design and optimization
+- **Synthetic Biology**: Genetic circuit and metabolic pathway engineering
+- **Data Standardization**: FAIR principles and bioinformatics data management
+- **Bioinformatics Tool Selection**: Evaluation and selection of appropriate tools
+- **Blockchain in Bioinformatics**: Blockchain applications for biological data
 
-# Load a template
-genomics_template = claude.load_prompt_template("prompt/genomics_prompt.json")
+## Environment Variables
 
-# Ask a bioinformatics question
-question = "How do I assemble a bacterial genome from Illumina paired-end reads?"
-response = claude.ask_question(question, genomics_template)
-print(response)
-
-# Ask a follow-up question
-follow_up = "What quality control steps should I include?"
-response = claude.ask_question(follow_up)
-print(response)
-```
-
-## Pre-built Templates
-
-The package includes pre-built templates for various bioinformatics research_areas:
-
-- **Genomics**: DNA sequencing, assembly, variant calling, etc.
-- **Proteomics**: Protein identification, quantification, and analysis
-- **Epigenomics**: DNA methylation, histone modifications, etc.
-- **Metabolomics**: Metabolite identification and quantification
-- **Metagenomics**: Analysis of microbial communities
-- **Sequence Analysis**: Alignments, motif finding, etc.
-
-## Creating Custom Templates
-
-To create a custom template:
-
-1. Define your research_area-specific details (tools, concepts, file formats)
-2. Create few-shot examples with representative queries and responses
-3. Use the `BioinformaticsPrompt` class to structure your template
-4. Validate your template using the validation utilities
-5. Export your template as JSON for reuse
+- `ANTHROPIC_API_KEY` or `CLAUDE_API_KEY`: Your Anthropic API key for accessing Claude
 
 ## License
 
@@ -151,6 +201,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgements
 
-- Partly inspired by the paper "Empowering beginners in bioinformatics with ChatGPT" by Evelyn Shue et al.
+- Partly inspired by the paper "Empowering beginners in bioinformatics with ChatGPT" by Evelyn Shue et al. (2023)
 - Based on the OPTIMAL model (Optimization of Prompts Through Iterative Mentoring and Assessment with an LLM chatbot)
-- Currently uses Anthropic's Claude API for advanced AI interactions. Other models planned for the future. 
+- Uses Anthropic's Claude API for advanced AI interactions
