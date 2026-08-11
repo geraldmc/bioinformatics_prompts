@@ -138,6 +138,17 @@ response = interaction.ask_claude(
 print(response)
 ```
 
+#### Choosing a model
+
+`ClaudeInteraction(model=...)` accepts an explicit model id. If omitted, no
+model is chosen at construction time — the first time a request is actually
+sent, the client queries Anthropic's Models API and picks the most recently
+released Sonnet-tier model as a reasonable middle-of-the-lineup default, then
+caches that choice for the lifetime of the instance. If the query fails (no
+network, invalid key, etc.), it falls back to a hardcoded constant
+(`FALLBACK_MODEL` in `claude_interaction.py`). Pass `model=` explicitly to
+skip this resolution entirely.
+
 ### Creating a Custom Template
 
 ```python

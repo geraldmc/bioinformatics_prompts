@@ -1,11 +1,45 @@
-"""Tests for claude_interaction.ClaudeInteraction (template discovery/loading only).
+"""Tests for claude_interaction.ClaudeInteraction.
 
-None of these tests call the Claude API.
+None of these tests call the real Claude API; network-facing calls are faked.
 """
 
 import pytest
 
-from claude_interaction import ClaudeInteraction
+from claude_interaction import FALLBACK_MODEL, ClaudeInteraction
+
+
+class _FakeModel:
+    def __init__(self, model_id):
+        self.id = model_id
+
+
+class _FakeModelsResource:
+    def __init__(self, model_ids=None, error=None):
+        self._model_ids = model_ids or []
+        self._error = error
+        self.calls = 0
+
+    def list(self):
+        self.calls += 1
+        if self._error is not None:
+            raise self._error
+        return [_FakeModel(model_id) for model_id in self._model_ids]
+
+
+class _FakeMessage:
+    def __init__(self, text):
+        self.content = [type("Block", (), {"text": text})()]
+
+
+class _FakeMessagesResource:
+    def create(self, **kwargs):
+        return _FakeMessage("fake response")
+
+
+class _FakeClient:
+    def __init__(self, model_ids=None, error=None):
+        self.models = _FakeModelsResource(model_ids=model_ids, error=error)
+        self.messages = _FakeMessagesResource()
 
 
 @pytest.fixture
@@ -41,3 +75,51 @@ def test_missing_api_key_raises(monkeypatch):
 
     with pytest.raises(ValueError):
         ClaudeInteraction(api_key=None, prompt_dir="prompt")
+
+
+def test_default_model_not_resolved_at_construction():
+    interaction = ClaudeInteraction(api_key="test-key", prompt_dir="prompt")
+
+    assert interaction.default_model is None
+
+
+def test_resolve_default_model_picks_most_recent_sonnet():
+    interaction = ClaudeInteraction(api_key="test-key", prompt_dir="prompt")
+    client = _FakeClient(
+        model_ids=["claude-opus-5", "claude-sonnet-5", "claude-sonnet-4-5", "claude-haiku-4-5"]
+    )
+
+    resolved = interaction._resolve_default_model(client)
+
+    assert resolved == "claude-sonnet-5"
+
+
+def test_resolve_default_model_falls_back_on_no_sonnet_match():
+    interaction = ClaudeInteraction(api_key="test-key", prompt_dir="prompt")
+    client = _FakeClient(model_ids=["claude-opus-5", "claude-haiku-4-5"])
+
+    resolved = interaction._resolve_default_model(client)
+
+    assert resolved == FALLBACK_MODEL
+
+
+def test_resolve_default_model_falls_back_on_exception():
+    interaction = ClaudeInteraction(api_key="test-key", prompt_dir="prompt")
+    client = _FakeClient(error=RuntimeError("network down"))
+
+    resolved = interaction._resolve_default_model(client)
+
+    assert resolved == FALLBACK_MODEL
+
+
+def test_send_to_claude_caches_resolved_model(monkeypatch):
+    fake_client = _FakeClient(model_ids=["claude-opus-5", "claude-sonnet-5"])
+    monkeypatch.setattr("anthropic.Anthropic", lambda **kwargs: fake_client)
+
+    interaction = ClaudeInteraction(api_key="test-key", prompt_dir="prompt")
+
+    interaction.send_to_claude("hello")
+    interaction.send_to_claude("hello again")
+
+    assert interaction.default_model == "claude-sonnet-5"
+    assert fake_client.models.calls == 1
