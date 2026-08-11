@@ -1,8 +1,6 @@
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # add project root to sys.path
+from pathlib import Path
 
-from templates.prompt_template import BioinformaticsPrompt, FewShotExample
+from prompt.templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a data standardization prompt template
 data_standardization_prompt = BioinformaticsPrompt(
@@ -293,11 +291,11 @@ if __name__ == "__main__":
     print(prompt)
     
     # Save prompt template to JSON
-    with open("../data_standardization_prompt.json", "w") as f:
+    with open(Path(__file__).resolve().parent.parent / "data_standardization_prompt.json", "w") as f:
         f.write(data_standardization_prompt.to_json())
 
    # Load prompt template from JSON
-    with open("../data_standardization_prompt.json", "r") as f:
+    with open(Path(__file__).resolve().parent.parent / "data_standardization_prompt.json", "r") as f:
         loaded_prompt = BioinformaticsPrompt.from_json(f.read())
     
     # Verify it works the same

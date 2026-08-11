@@ -1,10 +1,8 @@
 """Module containing the sequence analysis research_area prompt template."""
 
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # add project root to sys.path
+from pathlib import Path
 
-from templates.prompt_template import BioinformaticsPrompt, FewShotExample
+from prompt.templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a sequence analysis prompt template
 sequence_analysis_prompt = BioinformaticsPrompt(
@@ -566,11 +564,11 @@ if __name__ == "__main__":
     print(prompt)
     
     # Save prompt template to JSON
-    with open("../sequence_analysis_prompt.json", "w") as f:
+    with open(Path(__file__).resolve().parent.parent / "sequence_analysis_prompt.json", "w") as f:
         f.write(sequence_analysis_prompt.to_json())
 
    # Load prompt template from JSON
-    with open("../sequence_analysis_prompt.json", "r") as f:
+    with open(Path(__file__).resolve().parent.parent / "sequence_analysis_prompt.json", "r") as f:
         loaded_prompt = BioinformaticsPrompt.from_json(f.read())
     
     # Verify it works the same

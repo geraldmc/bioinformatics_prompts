@@ -1,8 +1,6 @@
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # add project root to sys.path
+from pathlib import Path
 
-from templates.prompt_template import BioinformaticsPrompt, FewShotExample
+from prompt.templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a blockchain in bioinformatics prompt template
 blockchain_bioinformatics_prompt = BioinformaticsPrompt(
@@ -367,11 +365,11 @@ if __name__ == "__main__":
     print(prompt)
     
     # Save prompt template to JSON
-    with open("../blockchain_bioinformatics_prompt.json", "w") as f:
+    with open(Path(__file__).resolve().parent.parent / "blockchain_bioinformatics_prompt.json", "w") as f:
         f.write(blockchain_bioinformatics_prompt.to_json())
 
     # Load prompt template from JSON
-    with open("../blockchain_bioinformatics_prompt.json", "r") as f:
+    with open(Path(__file__).resolve().parent.parent / "blockchain_bioinformatics_prompt.json", "r") as f:
         loaded_prompt = BioinformaticsPrompt.from_json(f.read())
     
     # Verify it works the same

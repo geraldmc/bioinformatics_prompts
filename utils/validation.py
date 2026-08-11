@@ -119,7 +119,7 @@ def export_all_prompts(prompts_dict: Dict[str, BioinformaticsPrompt], output_dir
 
 if __name__ == "__main__":
     # FewShotExample usage
-    from prompt.genomics import genomics_prompt
+    from prompt.templates.genomics import genomics_prompt
     
     # Validate a single prompt
     validation_result = validate_prompt(genomics_prompt)
