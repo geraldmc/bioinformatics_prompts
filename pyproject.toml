@@ -1,0 +1,53 @@
+[project]
+name = "bioinformatics-prompts"
+version = "0.1.0"
+description = "Generate and use bioinformatics-specific prompts with Anthropic's Claude AI"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "anthropic>=0.49.0",
+    "python-dotenv>=1.1.0",
+    "loguru>=0.7",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=6.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = ["-ra"]
+
+[tool.coverage.run]
+branch = true
+source = ["."]
+omit = [
+    "prompt/templates/ai.py",
+    "prompt/templates/bioinformatics_tools.py",
+    "prompt/templates/blockchain_bioinformatics.py",
+    "prompt/templates/data_standardization.py",
+    "prompt/templates/epigenomics.py",
+    "prompt/templates/genomics.py",
+    "prompt/templates/gwas.py",
+    "prompt/templates/metagenomics.py",
+    "prompt/templates/ngs_sequencing.py",
+    "prompt/templates/precision_medicine.py",
+    "prompt/templates/sequence_analysis.py",
+    "prompt/templates/single-cell.py",
+    "prompt/templates/synthetic_biology.py",
+    "prompt/templates/workflow_automation.py",
+    "*/tests/*",
+    "*/.venv/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+exclude_also = [
+    "if __name__ == .__main__.:",
+]

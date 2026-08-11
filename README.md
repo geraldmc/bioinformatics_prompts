@@ -57,8 +57,12 @@ bioinformatics-prompts/
 │   ├── synthetic_biology_prompt.json
 │   └── workflow_automation_prompt.json
 │
-├── tests/                    # Test modules (placeholder directory)
-│   └── __init__.py
+├── tests/                    # Test suite (pytest)
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_claude_interaction.py
+│   ├── test_prompt_template.py
+│   └── test_validation.py
 │
 ├── utils/                    # Utility functions
 │   ├── __init__.py
@@ -67,24 +71,25 @@ bioinformatics-prompts/
 │   └── validation.py
 │
 ├── claude_interaction.py     # Claude API integration
-├── requirements.txt          # Project dependencies
+├── pyproject.toml            # Project metadata, dependencies, tool config
+├── uv.lock                   # Locked dependency versions
 └── README.md                 # This file
 ```
 
 ## Installation
+
+Dependencies and the virtual environment are managed with [uv](https://docs.astral.sh/uv/).
 
 ```bash
 # Clone the repository
 git clone https://github.com/geraldmc/bioinformatics-prompts.git
 cd bioinformatics-prompts
 
-# Create a virtual environment (optional but recommended)
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
+# Install dependencies into a local .venv (creates one automatically)
+uv sync
 ```
+
+Run any command in that environment with `uv run <command>` (e.g. `uv run python claude_interaction.py`), or activate it directly with `source .venv/bin/activate`.
 
 ## Usage
 
@@ -170,6 +175,16 @@ from utils.validation import validate_prompt
 # Validate your template
 validation_result = validate_prompt(custom_prompt)
 print(validation_result)
+```
+
+## Testing
+
+```bash
+# Run the test suite
+uv run pytest
+
+# Run with a coverage report
+uv run pytest --cov
 ```
 
 ## Available Prompt Templates
