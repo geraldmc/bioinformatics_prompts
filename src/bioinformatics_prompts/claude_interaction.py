@@ -4,7 +4,9 @@ import glob
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
-from prompt.templates.prompt_template import BioinformaticsPrompt
+from dotenv import load_dotenv
+
+from bioinformatics_prompts.prompt.templates.prompt_template import BioinformaticsPrompt
 
 # Last-resort default model, used only if a model isn't passed explicitly
 # and querying the Models API for a current one fails (see
@@ -15,14 +17,16 @@ FALLBACK_MODEL = "claude-sonnet-4-6"
 class ClaudeInteraction:
   """Class for interacting with Claude API for bioinformatics prompts."""
 
-  def __init__(self, api_key: Optional[str] = None, prompt_dir: str = "prompt",
+  def __init__(self, api_key: Optional[str] = None, prompt_dir: Optional[str] = None,
               model: Optional[str] = None):
     """
     Initialize the Claude interaction class.
 
     Args:
         api_key: Claude API key. If None, reads from CLAUDE_API_KEY environment variable.
-        prompt_dir: Directory containing prompt template JSON files.
+        prompt_dir: Directory containing prompt template JSON files. If None,
+            defaults to the `prompt` directory shipped alongside this module,
+            resolved independently of the current working directory.
         model: Default Claude model to use. If None, a default is resolved
             lazily on first use (see _resolve_default_model) rather than
             at construction time, so instantiating this class never
@@ -31,8 +35,8 @@ class ClaudeInteraction:
     self.api_key = api_key or os.environ.get("CLAUDE_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
     if not self.api_key:
         raise ValueError("Claude API key not provided or found in environment variables")
-    
-    self.prompt_dir = prompt_dir
+
+    self.prompt_dir = prompt_dir or str(Path(__file__).resolve().parent / "prompt")
     self.prompt_template = None
     self.default_model = model
     
@@ -359,21 +363,22 @@ class ClaudeInteraction:
         print("\nClaude:", response)
 
 
-# Example usage
-if __name__ == "__main__":
-    import os
-    from dotenv import load_dotenv
-    
+def main() -> None:
+    """Entry point for the `bioinformatics-prompts` console script."""
     # Try to load API key from .env file
     load_dotenv()
-    
+
     # Initialize the interaction class
     try:
-        interaction = ClaudeInteraction(prompt_dir="prompt")
-        
+        interaction = ClaudeInteraction()
+
         # Start an interactive conversation
         interaction.start_conversation()
     except ValueError as e:
         print(f"Error: {str(e)}")
         print("Please set your ANTHROPIC_API_KEY or CLAUDE_API_KEY environment variable.")
         print("You can create a .env file with: ANTHROPIC_API_KEY=your_key_here")
+
+
+if __name__ == "__main__":
+    main()

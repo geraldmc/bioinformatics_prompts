@@ -12,38 +12,44 @@ dependencies = [
     "dspy>=3.3.0",
 ]
 
+[project.scripts]
+bioinformatics-prompts = "bioinformatics_prompts.claude_interaction:main"
+
 [dependency-groups]
 dev = [
     "pytest>=8.0",
     "pytest-cov>=6.0",
 ]
 
+[build-system]
+requires = ["uv_build>=0.12.0,<0.13.0"]
+build-backend = "uv_build"
+
 [tool.uv]
-package = false
+package = true
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
 testpaths = ["tests"]
 addopts = ["-ra"]
 
 [tool.coverage.run]
 branch = true
-source = ["."]
+source = ["src/bioinformatics_prompts"]
 omit = [
-    "prompt/templates/ai.py",
-    "prompt/templates/bioinformatics_tools.py",
-    "prompt/templates/blockchain_bioinformatics.py",
-    "prompt/templates/data_standardization.py",
-    "prompt/templates/epigenomics.py",
-    "prompt/templates/genomics.py",
-    "prompt/templates/gwas.py",
-    "prompt/templates/metagenomics.py",
-    "prompt/templates/ngs_sequencing.py",
-    "prompt/templates/precision_medicine.py",
-    "prompt/templates/sequence_analysis.py",
-    "prompt/templates/single-cell.py",
-    "prompt/templates/synthetic_biology.py",
-    "prompt/templates/workflow_automation.py",
+    "src/bioinformatics_prompts/prompt/templates/ai.py",
+    "src/bioinformatics_prompts/prompt/templates/bioinformatics_tools.py",
+    "src/bioinformatics_prompts/prompt/templates/blockchain_bioinformatics.py",
+    "src/bioinformatics_prompts/prompt/templates/data_standardization.py",
+    "src/bioinformatics_prompts/prompt/templates/epigenomics.py",
+    "src/bioinformatics_prompts/prompt/templates/genomics.py",
+    "src/bioinformatics_prompts/prompt/templates/gwas.py",
+    "src/bioinformatics_prompts/prompt/templates/metagenomics.py",
+    "src/bioinformatics_prompts/prompt/templates/ngs_sequencing.py",
+    "src/bioinformatics_prompts/prompt/templates/precision_medicine.py",
+    "src/bioinformatics_prompts/prompt/templates/sequence_analysis.py",
+    "src/bioinformatics_prompts/prompt/templates/single_cell.py",
+    "src/bioinformatics_prompts/prompt/templates/synthetic_biology.py",
+    "src/bioinformatics_prompts/prompt/templates/workflow_automation.py",
     "*/tests/*",
     "*/.venv/*",
 ]

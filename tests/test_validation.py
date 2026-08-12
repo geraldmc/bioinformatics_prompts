@@ -1,6 +1,6 @@
-"""Tests for utils.validation."""
+"""Tests for bioinformatics_prompts.utils.validation."""
 
-from utils.validation import validate_prompt
+from bioinformatics_prompts.utils.validation import validate_prompt
 
 
 def test_validate_prompt_passes_for_well_formed_prompt(sample_prompt):

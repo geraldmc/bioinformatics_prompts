@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from prompt.templates.prompt_template import BioinformaticsPrompt, FewShotExample
+from bioinformatics_prompts.prompt.templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create an artificial intelligence prompt template
 artificial_intelligence_prompt = BioinformaticsPrompt(

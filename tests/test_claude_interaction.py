@@ -5,7 +5,8 @@ None of these tests call the real Claude API; network-facing calls are faked.
 
 import pytest
 
-from claude_interaction import FALLBACK_MODEL, ClaudeInteraction
+import bioinformatics_prompts.claude_interaction as claude_interaction_module
+from bioinformatics_prompts.claude_interaction import FALLBACK_MODEL, ClaudeInteraction, main
 
 
 class _FakeModel:
@@ -110,6 +111,28 @@ def test_resolve_default_model_falls_back_on_exception():
     resolved = interaction._resolve_default_model(client)
 
     assert resolved == FALLBACK_MODEL
+
+
+def test_default_prompt_dir_is_cwd_independent(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+
+    interaction = ClaudeInteraction(api_key="test-key")
+    templates = interaction.list_available_templates()
+
+    assert len(templates) > 0
+
+
+def test_main_loads_dotenv_and_starts_conversation(monkeypatch):
+    calls = []
+    monkeypatch.setattr(claude_interaction_module, "load_dotenv", lambda: calls.append("load_dotenv"))
+    monkeypatch.setattr(
+        ClaudeInteraction, "start_conversation", lambda self: calls.append("start_conversation")
+    )
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+
+    main()
+
+    assert calls == ["load_dotenv", "start_conversation"]
 
 
 def test_send_to_claude_caches_resolved_model(monkeypatch):
