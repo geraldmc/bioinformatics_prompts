@@ -6,19 +6,27 @@ from typing import Dict, List, Optional, Union
 
 from prompt.templates.prompt_template import BioinformaticsPrompt
 
+# Last-resort default model, used only if a model isn't passed explicitly
+# and querying the Models API for a current one fails (see
+# ClaudeInteraction._resolve_default_model).
+FALLBACK_MODEL = "claude-sonnet-4-6"
+
 
 class ClaudeInteraction:
   """Class for interacting with Claude API for bioinformatics prompts."""
-  
-  def __init__(self, api_key: Optional[str] = None, prompt_dir: str = "prompt", 
-              model: str = "claude-3-7-sonnet-20250219"):
+
+  def __init__(self, api_key: Optional[str] = None, prompt_dir: str = "prompt",
+              model: Optional[str] = None):
     """
     Initialize the Claude interaction class.
-    
+
     Args:
         api_key: Claude API key. If None, reads from CLAUDE_API_KEY environment variable.
         prompt_dir: Directory containing prompt template JSON files.
-        model: Default Claude model to use.
+        model: Default Claude model to use. If None, a default is resolved
+            lazily on first use (see _resolve_default_model) rather than
+            at construction time, so instantiating this class never
+            requires network access.
     """
     self.api_key = api_key or os.environ.get("CLAUDE_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
     if not self.api_key:
@@ -158,29 +166,56 @@ class ClaudeInteraction:
   def get_conversation_history(self) -> List[Dict[str, str]]:
     """Get the current conversation history."""
     return self.conversation_history.copy()
-  
-  def send_to_claude(self, prompt: str, model: str = None, max_tokens: int = 4000, 
+
+  def _resolve_default_model(self, client) -> str:
+    """
+    Resolve a sensible default model by querying the Models API.
+
+    Picks the most recently released model whose id contains "sonnet"
+    (the API lists models most-recent-first, so the first match is the
+    latest one). Falls back to FALLBACK_MODEL if the query fails or no
+    matching model is found.
+
+    Args:
+        client: An initialized anthropic.Anthropic client.
+
+    Returns: A model id string.
+    """
+    try:
+      for model in client.models.list():
+        if "sonnet" in model.id:
+          return model.id
+    except Exception as e:
+      print(f"Error querying available models: {str(e)}")
+
+    return FALLBACK_MODEL
+
+  def send_to_claude(self, prompt: str, model: str = None, max_tokens: int = 4000,
                     use_history: bool = False) -> str:
     """
     Send a prompt to Claude API and get the response.
-    
+
     Args:
         prompt: The formatted prompt to send
-        model: Claude model to use (defaults to self.default_model)
+        model: Claude model to use (defaults to self.default_model, resolving
+            and caching it lazily via _resolve_default_model if not yet set)
         max_tokens: Maximum tokens in response (default: 4000)
         use_history: Whether to include conversation history
-        
+
     Returns: Claude's response as a string
     """
     try:
         import anthropic
-        
-        # Use default model if none specified
-        model = model or self.default_model
-        
+
         # Initialize the client
         client = anthropic.Anthropic(api_key=self.api_key)
-        
+
+        # Use default model if none specified, resolving and caching it lazily
+        if model is None:
+            if self.default_model is None:
+                self.default_model = self._resolve_default_model(client)
+            model = self.default_model
+
         # Set up system prompt if not already set
         if self.system_prompt is None:
             self.set_system_prompt()
