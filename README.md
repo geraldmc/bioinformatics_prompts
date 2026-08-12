@@ -22,61 +22,68 @@ The package follows the OPTIMAL model (Optimization of Prompts Through Iterative
 
 ```
 bioinformatics-prompts/
-├── prompt/                   # Prompt implementations
-│   ├── __init__.py
-│   ├── templates/            # Template definitions
-│   │   ├── __init__.py
-│   │   ├── ai.py
-│   │   ├── bioinformatics_tools.py
-│   │   ├── blockchain_bioinformatics.py
-│   │   ├── data_standardization.py
-│   │   ├── epigenomics.py
-│   │   ├── genomics.py
-│   │   ├── gwas.py
-│   │   ├── metagenomics.py
-│   │   ├── ngs_sequencing.py
-│   │   ├── precision_medicine.py
-│   │   ├── prompt_template.py  # Base template class
-│   │   ├── sequence_analysis.py
-│   │   ├── single-cell.py
-│   │   ├── synthetic_biology.py
-│   │   └── workflow_automation.py
-│   │
-│   ├── artificial_intelligence_prompt.json
-│   ├── bioinformatics_tools_prompt.json
-│   ├── blockchain_bioinformatics_prompt.json
-│   ├── data_standardization_prompt.json
-│   ├── epigenomics_prompt.json
-│   ├── genomics_prompt.json
-│   ├── gwas_prompt.json
-│   ├── metagenomics_prompt.json
-│   ├── ngs_sequencing_prompt.json
-│   ├── precision_medicine_prompt.json
-│   ├── sequence_analysis_prompt.json
-│   ├── single_cell_genomics_prompt.json
-│   ├── synthetic_biology_prompt.json
-│   └── workflow_automation_prompt.json
+├── src/
+│   └── bioinformatics_prompts/
+│       ├── __init__.py        # Public API: ClaudeInteraction, BioinformaticsPrompt
+│       ├── claude_interaction.py  # Claude API integration
+│       ├── prompt/                # Prompt implementations
+│       │   ├── __init__.py
+│       │   ├── templates/         # Template definitions
+│       │   │   ├── __init__.py
+│       │   │   ├── ai.py
+│       │   │   ├── bioinformatics_tools.py
+│       │   │   ├── blockchain_bioinformatics.py
+│       │   │   ├── data_standardization.py
+│       │   │   ├── epigenomics.py
+│       │   │   ├── genomics.py
+│       │   │   ├── gwas.py
+│       │   │   ├── metagenomics.py
+│       │   │   ├── ngs_sequencing.py
+│       │   │   ├── precision_medicine.py
+│       │   │   ├── prompt_template.py  # Base template class
+│       │   │   ├── sequence_analysis.py
+│       │   │   ├── single_cell.py
+│       │   │   ├── synthetic_biology.py
+│       │   │   └── workflow_automation.py
+│       │   │
+│       │   ├── artificial_intelligence_prompt.json
+│       │   ├── bioinformatics_tools_prompt.json
+│       │   ├── blockchain_bioinformatics_prompt.json
+│       │   ├── data_standardization_prompt.json
+│       │   ├── epigenomics_prompt.json
+│       │   ├── genomics_prompt.json
+│       │   ├── gwas_prompt.json
+│       │   ├── metagenomics_prompt.json
+│       │   ├── ngs_sequencing_prompt.json
+│       │   ├── precision_medicine_prompt.json
+│       │   ├── sequence_analysis_prompt.json
+│       │   ├── single_cell_genomics_prompt.json
+│       │   ├── synthetic_biology_prompt.json
+│       │   └── workflow_automation_prompt.json
+│       │
+│       └── utils/                 # Utility functions
+│           ├── __init__.py
+│           ├── formatting.py
+│           ├── logging.py
+│           └── validation.py
 │
 ├── tests/                    # Test suite (pytest)
 │   ├── __init__.py
 │   ├── conftest.py
 │   ├── test_claude_interaction.py
 │   ├── test_prompt_template.py
+│   ├── test_templates_importable.py
 │   └── test_validation.py
 │
-├── utils/                    # Utility functions
-│   ├── __init__.py
-│   ├── formatting.py
-│   ├── logging.py
-│   └── validation.py
-│
-├── claude_interaction.py     # Claude API integration
+├── LICENSE                   # MIT License
 ├── pyproject.toml            # Project metadata, dependencies, tool config
 ├── uv.lock                   # Locked dependency versions
 └── README.md                 # This file
 ```
 
 ## Installation
+
+### As a contributor
 
 Dependencies and the virtual environment are managed with [uv](https://docs.astral.sh/uv/).
 
@@ -89,7 +96,33 @@ cd bioinformatics-prompts
 uv sync
 ```
 
-Run any command in that environment with `uv run <command>` (e.g. `uv run python claude_interaction.py`), or activate it directly with `source .venv/bin/activate`.
+Run any command in that environment with `uv run <command>` (e.g. `uv run bioinformatics-prompts`), or activate it directly with `source .venv/bin/activate`.
+
+### As a dependency of another local project
+
+This package is installable, but not published to PyPI. Add it to another
+uv-managed project directly from a local path or a git URL:
+
+```bash
+uv add /path/to/bioinformatics_prompts
+# or
+uv add git+https://github.com/geraldmc/bioinformatics_prompts.git
+```
+
+Then import it like any other package:
+
+```python
+from bioinformatics_prompts import ClaudeInteraction, BioinformaticsPrompt
+```
+
+### Console script
+
+Installing the package also installs a `bioinformatics-prompts` command that
+starts the interactive conversation mode:
+
+```bash
+uv run bioinformatics-prompts
+```
 
 ## Usage
 
@@ -98,7 +131,7 @@ Run any command in that environment with `uv run <command>` (e.g. `uv run python
 The simplest way to use this package is through the interactive conversation mode:
 
 ```python
-from claude_interaction import ClaudeInteraction
+from bioinformatics_prompts import ClaudeInteraction
 
 # Initialize (will use ANTHROPIC_API_KEY from environment variables)
 interaction = ClaudeInteraction()
@@ -116,7 +149,7 @@ This will start a terminal-based conversation where you may:
 ### Programmatic Usage
 
 ```python
-from claude_interaction import ClaudeInteraction
+from bioinformatics_prompts import ClaudeInteraction
 
 # Initialize with API key
 api_key = "your_anthropic_api_key"  # or set as environment variable
@@ -152,7 +185,8 @@ skip this resolution entirely.
 ### Creating a Custom Template
 
 ```python
-from prompt.templates.prompt_template import BioinformaticsPrompt, FewShotExample
+from bioinformatics_prompts import BioinformaticsPrompt
+from bioinformatics_prompts.prompt.templates.prompt_template import FewShotExample
 
 # Create a custom prompt template
 custom_prompt = BioinformaticsPrompt(
@@ -174,14 +208,14 @@ custom_prompt = BioinformaticsPrompt(
 )
 
 # Save the template for reuse
-with open("prompt/custom_prompt.json", "w") as f:
+with open("custom_prompt.json", "w") as f:
     f.write(custom_prompt.to_json())
 ```
 
 ### Validating a Prompt Template
 
 ```python
-from utils.validation import validate_prompt
+from bioinformatics_prompts.utils.validation import validate_prompt
 
 # Validate your template
 validation_result = validate_prompt(custom_prompt)

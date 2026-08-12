@@ -1,6 +1,6 @@
-"""Tests for prompt.templates.prompt_template."""
+"""Tests for bioinformatics_prompts.prompt.templates.prompt_template."""
 
-from prompt.templates.prompt_template import BioinformaticsPrompt, FewShotExample
+from bioinformatics_prompts.prompt.templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 
 def test_generate_prompt_includes_sections_and_query(sample_prompt):

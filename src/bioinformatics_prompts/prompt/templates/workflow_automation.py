@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from prompt.templates.prompt_template import BioinformaticsPrompt, FewShotExample
+from bioinformatics_prompts.prompt.templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a workflow automation prompt template
 workflow_automation_prompt = BioinformaticsPrompt(

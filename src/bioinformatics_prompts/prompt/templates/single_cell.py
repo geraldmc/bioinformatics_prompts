@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from prompt.templates.prompt_template import BioinformaticsPrompt, FewShotExample
+from bioinformatics_prompts.prompt.templates.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a single-cell genomics prompt template
 single_cell_genomics_prompt = BioinformaticsPrompt(
