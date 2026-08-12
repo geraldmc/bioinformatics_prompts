@@ -9,7 +9,7 @@ from prompt.templates.prompt_template import BioinformaticsPrompt
 # Last-resort default model, used only if a model isn't passed explicitly
 # and querying the Models API for a current one fails (see
 # ClaudeInteraction._resolve_default_model).
-FALLBACK_MODEL = "claude-3-7-sonnet-20250219"
+FALLBACK_MODEL = "claude-sonnet-4-6"
 
 
 class ClaudeInteraction:
