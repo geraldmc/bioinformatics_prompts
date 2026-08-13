@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 from dotenv import load_dotenv
+from prompt_toolkit import PromptSession
+from prompt_toolkit.history import FileHistory
 
 from bioinformatics_prompts.prompt.templates.prompt_template import BioinformaticsPrompt
 
@@ -12,6 +14,10 @@ from bioinformatics_prompts.prompt.templates.prompt_template import Bioinformati
 # and querying the Models API for a current one fails (see
 # ClaudeInteraction._resolve_default_model).
 FALLBACK_MODEL = "claude-sonnet-4-6"
+
+# Persistent history file for the interactive prompt session, so Up/Down
+# arrow recall works across separate runs of the CLI.
+HISTORY_FILE = Path.home() / ".bioinformatics_prompts_history"
 
 
 class ClaudeInteraction:
@@ -43,6 +49,7 @@ class ClaudeInteraction:
     # For managing conversation history
     self.conversation_history = []
     self.system_prompt = None
+    self.prompt_session = None
       
   def list_available_templates(self) -> List[Dict[str, str]]:
     """
@@ -311,6 +318,20 @@ class ClaudeInteraction:
         return f"An error occurred: {str(e)}"
 
 
+  def _get_prompt_session(self) -> PromptSession:
+    """
+    Lazily construct and cache a PromptSession backed by persistent
+    file history, so ↑/↓ recall previously typed messages across runs.
+    """
+    if self.prompt_session is None:
+      # FileHistory persists every message typed (which may include
+      # pasted secrets) in plaintext with no expiry, so restrict the
+      # file to the owner rather than leaving it at the umask default.
+      HISTORY_FILE.touch(mode=0o600, exist_ok=True)
+      os.chmod(HISTORY_FILE, 0o600)
+      self.prompt_session = PromptSession(history=FileHistory(str(HISTORY_FILE)))
+    return self.prompt_session
+
   def start_conversation(self, use_template: bool = True) -> None:
     """
     Start an interactive conversation with Claude in the terminal.
@@ -335,7 +356,7 @@ class ClaudeInteraction:
     
     while True:
         # Get user input
-        user_query = input("\nYou: ")
+        user_query = self._get_prompt_session().prompt("\nYou: ")
         
         # Check for exit commands
         if user_query.lower() in ('quit', 'exit', 'bye'):
