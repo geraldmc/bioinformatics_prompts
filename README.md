@@ -145,6 +145,7 @@ This will start a terminal-based conversation where you may:
 - Ask questions within that domain
 - Get contextually-aware responses from Claude
 - Switch templates or reset the conversation as needed
+- Recall previous inputs with the Up/Down arrow keys (history persists across sessions in `~/.bioinformatics_prompts_history`)
 
 ### Programmatic Usage
 
