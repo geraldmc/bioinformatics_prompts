@@ -148,9 +148,10 @@ def test_send_to_claude_caches_resolved_model(monkeypatch):
     assert fake_client.models.calls == 1
 
 
-def test_get_prompt_session_constructs_lazily_with_file_history(monkeypatch):
+def test_get_prompt_session_constructs_lazily_with_file_history(monkeypatch, tmp_path):
     created_histories = []
     created_sessions = []
+    history_file = tmp_path / ".bioinformatics_prompts_history"
 
     class _FakeFileHistory:
         def __init__(self, filename):
@@ -164,6 +165,7 @@ def test_get_prompt_session_constructs_lazily_with_file_history(monkeypatch):
 
     monkeypatch.setattr(claude_interaction_module, "FileHistory", _FakeFileHistory)
     monkeypatch.setattr(claude_interaction_module, "PromptSession", _FakePromptSession)
+    monkeypatch.setattr(claude_interaction_module, "HISTORY_FILE", history_file)
 
     interaction = ClaudeInteraction(api_key="test-key", prompt_dir="prompt")
     assert interaction.prompt_session is None
@@ -174,8 +176,10 @@ def test_get_prompt_session_constructs_lazily_with_file_history(monkeypatch):
     assert session1 is session2
     assert len(created_sessions) == 1
     assert len(created_histories) == 1
-    assert created_histories[0].filename == str(claude_interaction_module.HISTORY_FILE)
+    assert created_histories[0].filename == str(history_file)
     assert session1.history is created_histories[0]
+    assert history_file.exists()
+    assert (history_file.stat().st_mode & 0o777) == 0o600
 
 
 class _FakeSession:

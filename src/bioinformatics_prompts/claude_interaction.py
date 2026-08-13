@@ -324,6 +324,11 @@ class ClaudeInteraction:
     file history, so ↑/↓ recall previously typed messages across runs.
     """
     if self.prompt_session is None:
+      # FileHistory persists every message typed (which may include
+      # pasted secrets) in plaintext with no expiry, so restrict the
+      # file to the owner rather than leaving it at the umask default.
+      HISTORY_FILE.touch(mode=0o600, exist_ok=True)
+      os.chmod(HISTORY_FILE, 0o600)
       self.prompt_session = PromptSession(history=FileHistory(str(HISTORY_FILE)))
     return self.prompt_session
 
