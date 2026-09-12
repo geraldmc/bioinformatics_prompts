@@ -7,6 +7,8 @@ from typing import Dict, List, Optional, Union
 from dotenv import load_dotenv
 
 from bioinformatics_prompts.prompt.templates.prompt_template import BioinformaticsPrompt
+from bioinformatics_prompts.dspy_modules.lm import configure_claude_lm
+from bioinformatics_prompts.dspy_modules.router import TemplateRouter, match_area
 
 # Last-resort default model, used only if a model isn't passed explicitly
 # and querying the Models API for a current one fails (see
@@ -70,7 +72,8 @@ class ClaudeInteraction:
         templates.append({
             "id": idx,
             "filename": str(file_path),
-            "research_area": research_area
+            "research_area": research_area,
+            "description": data.get("description", "")
         })
       except (json.JSONDecodeError, FileNotFoundError) as e:
         print(f"Error reading {file_path}: {str(e)}")
@@ -129,7 +132,63 @@ class ClaudeInteraction:
     except Exception as e:
       print(f"Error loading template: {str(e)}")
       return None
-  
+
+  def route_template(self, user_query: str) -> Optional[Dict[str, str]]:
+    """
+    Use a DSPy-based router to pick the best-matching template for a
+    user query, without presenting the interactive numbered menu.
+
+    Args:
+        user_query: The user's bioinformatics question.
+
+    Returns: The matched template dict (same shape as list_available_templates()
+        entries) if a match is found, None otherwise.
+    """
+    templates = self.list_available_templates()
+
+    if not templates:
+        print(f"No prompt templates found in {self.prompt_dir}")
+        return None
+
+    model = self.default_model or FALLBACK_MODEL
+    configure_claude_lm(model=model, api_key=self.api_key)
+
+    router = TemplateRouter()
+    prediction = router(question=user_query, areas=templates)
+    matched = match_area(prediction.research_area, templates)
+
+    if not matched:
+        print(f"No matching template found for query: {user_query}")
+        return None
+
+    return matched
+
+  def load_prompt_template_by_query(self, user_query: str) -> Optional[BioinformaticsPrompt]:
+    """
+    Route a user query to a template and load it, as an alternative to the
+    interactive numbered menu in load_prompt_template.
+
+    Args:
+        user_query: The user's bioinformatics question.
+
+    Returns: The loaded BioinformaticsPrompt if a match was found and loaded
+        successfully, None otherwise (callers should fall back to the
+        interactive picker, e.g. load_prompt_template()).
+    """
+    matched = self.route_template(user_query)
+
+    if not matched:
+        return None
+
+    try:
+      with open(matched["filename"], "r") as f:
+          self.prompt_template = BioinformaticsPrompt.from_json(f.read())
+      print(f"Loaded template: {matched['research_area']}")
+      return self.prompt_template
+    except Exception as e:
+      print(f"Error loading template: {str(e)}")
+      return None
+
   def generate_prompt(self, user_query: str) -> str:
     """
     Generate a prompt for Claude based on a user query.

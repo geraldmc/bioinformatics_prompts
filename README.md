@@ -182,6 +182,28 @@ network, invalid key, etc.), it falls back to a hardcoded constant
 (`FALLBACK_MODEL` in `claude_interaction.py`). Pass `model=` explicitly to
 skip this resolution entirely.
 
+#### Automatic template routing
+
+Instead of the interactive numbered menu (`load_prompt_template(interactive=True)`),
+you can route a user's query directly to the best-matching template using a
+small DSPy-based router:
+
+```python
+interaction = ClaudeInteraction(api_key=api_key)
+
+# Picks a template automatically based on the query text, or returns None
+# if no good match is found (fall back to load_prompt_template() in that case).
+loaded = interaction.load_prompt_template_by_query(
+    "How do I call variants from bacterial WGS reads?"
+)
+```
+
+This uses `dspy.LM("anthropic/<model>", ...)` under the hood (see
+`dspy_modules/lm.py` and `dspy_modules/router.py`), resolving the model the
+same way as `send_to_claude` (`self.default_model` if set, else
+`FALLBACK_MODEL`). It is not yet wired into `start_conversation()` or the
+`bioinformatics-prompts` console script — those still use the interactive menu.
+
 ### Creating a Custom Template
 
 ```python
