@@ -244,6 +244,7 @@ dependencies = [
     { name = "ipython", version = "8.39.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "ipython", version = "9.16.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "loguru" },
+    { name = "prompt-toolkit" },
     { name = "python-dotenv" },
 ]
 
@@ -259,6 +260,7 @@ requires-dist = [
     { name = "dspy", specifier = ">=3.3.0" },
     { name = "ipython", specifier = ">=8.39.0" },
     { name = "loguru", specifier = ">=0.7" },
+    { name = "prompt-toolkit", specifier = ">=3.0.53" },
     { name = "python-dotenv", specifier = ">=1.1.0" },
 ]
 

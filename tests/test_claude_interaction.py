@@ -146,3 +146,65 @@ def test_send_to_claude_caches_resolved_model(monkeypatch):
 
     assert interaction.default_model == "claude-sonnet-5"
     assert fake_client.models.calls == 1
+
+
+def test_get_prompt_session_constructs_lazily_with_file_history(monkeypatch, tmp_path):
+    created_histories = []
+    created_sessions = []
+    history_file = tmp_path / ".bioinformatics_prompts_history"
+
+    class _FakeFileHistory:
+        def __init__(self, filename):
+            self.filename = filename
+            created_histories.append(self)
+
+    class _FakePromptSession:
+        def __init__(self, history=None):
+            self.history = history
+            created_sessions.append(self)
+
+    monkeypatch.setattr(claude_interaction_module, "FileHistory", _FakeFileHistory)
+    monkeypatch.setattr(claude_interaction_module, "PromptSession", _FakePromptSession)
+    monkeypatch.setattr(claude_interaction_module, "HISTORY_FILE", history_file)
+
+    interaction = ClaudeInteraction(api_key="test-key", prompt_dir="prompt")
+    assert interaction.prompt_session is None
+
+    session1 = interaction._get_prompt_session()
+    session2 = interaction._get_prompt_session()
+
+    assert session1 is session2
+    assert len(created_sessions) == 1
+    assert len(created_histories) == 1
+    assert created_histories[0].filename == str(history_file)
+    assert session1.history is created_histories[0]
+    assert history_file.exists()
+    assert (history_file.stat().st_mode & 0o777) == 0o600
+
+
+class _FakeSession:
+    def __init__(self, responses):
+        self._responses = list(responses)
+        self.calls = []
+
+    def prompt(self, message=""):
+        self.calls.append(message)
+        return self._responses.pop(0)
+
+
+def test_start_conversation_uses_injected_prompt_session(monkeypatch, capsys):
+    fake_client = _FakeClient(model_ids=["claude-sonnet-5"])
+    monkeypatch.setattr("anthropic.Anthropic", lambda **kwargs: fake_client)
+
+    interaction = ClaudeInteraction(api_key="test-key", prompt_dir="prompt")
+    fake_session = _FakeSession(["hello", "quit"])
+    interaction.prompt_session = fake_session
+
+    # use_template=False: skip load_prompt_template(), which has its own,
+    # out-of-scope input() call that would hang under pytest otherwise.
+    interaction.start_conversation(use_template=False)
+
+    assert fake_session.calls == ["\nYou: ", "\nYou: "]
+    assert interaction.conversation_history[0] == {"role": "user", "content": "hello"}
+    captured = capsys.readouterr()
+    assert "Ending conversation. Goodbye!" in captured.out
