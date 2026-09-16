@@ -3,10 +3,13 @@
 import re
 import os
 import json
-from typing import List, Dict, Optional, Union
+import logging
+from typing import List, Dict, Union
 from pathlib import Path
 
 from bioinformatics_prompts.prompt.templates.prompt_template import BioinformaticsPrompt
+
+logger = logging.getLogger(__name__)
 
 
 def validate_prompt(prompt: BioinformaticsPrompt) -> Dict[str, Union[bool, List[str]]]:
@@ -114,7 +117,7 @@ def export_all_prompts(prompts_dict: Dict[str, BioinformaticsPrompt], output_dir
         with open(output_path, "w") as f:
             f.write(prompt.to_json())
             
-    print(f"Exported {len(prompts_dict)} prompts to {output_dir}")
+    logger.info("Exported %d prompts to %s", len(prompts_dict), output_dir)
 
 
 if __name__ == "__main__":

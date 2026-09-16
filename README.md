@@ -68,8 +68,6 @@ bioinformatics-prompts/
 │       │
 │       └── utils/                 # Utility functions
 │           ├── __init__.py
-│           ├── formatting.py
-│           ├── logging.py
 │           └── validation.py
 │
 ├── tests/                    # Test suite (pytest)
@@ -273,6 +271,29 @@ from bioinformatics_prompts.utils.validation import validate_prompt
 # Validate your template
 validation_result = validate_prompt(custom_prompt)
 print(validation_result)
+```
+
+### Logging
+
+The package logs through the standard library's `logging` module, under the
+`bioinformatics_prompts` logger. Following the guidance in the Python logging
+HOWTO, it installs **only a `NullHandler`** and configures nothing else — no
+handlers, no formatters, no levels. Importing it will never alter logging
+configuration your application has already set up, and it produces no log
+output until you configure a handler.
+
+(Note that `ClaudeInteraction` does still write progress and error messages to
+stdout with `print()`, independently of logging. Those calls are being removed
+in favour of exceptions and log records — see
+[#14](https://github.com/geraldmc/bioinformatics_prompts/issues/14).)
+
+To see the package's log records, configure logging as you normally would:
+
+```python
+import logging
+
+logging.basicConfig(level=logging.INFO)          # or dictConfig, or your own handlers
+logging.getLogger("bioinformatics_prompts").setLevel(logging.DEBUG)  # optional
 ```
 
 ## Testing
