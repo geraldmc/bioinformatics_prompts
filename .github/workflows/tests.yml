@@ -1,0 +1,77 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+# The suite fakes every network-facing call (tests/test_claude_interaction.py
+# substitutes a fake anthropic client; tests/test_router.py uses DSPy's DummyLM),
+# so no API key is needed here and none should ever be added.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      # Report every failing version, not just the first.
+      fail-fast: false
+      matrix:
+        # Every version requires-python = ">=3.10" claims. uv.lock resolves
+        # differently across this range (ipython splits 8.39/9.16 at 3.11,
+        # async-timeout below 3.11, typing-extensions below 3.13), so the floor
+        # and ceiling genuinely install different dependency sets.
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install uv and set the Python version
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          # "auto" is the default: caches on push/pull_request, and disables
+          # caching for pull_request_target/workflow_run/release, where a
+          # poisoned cache would be a security problem. Stated explicitly so the
+          # behaviour is visible rather than inherited.
+          enable-cache: "auto"
+
+      - name: Install the locked dependency set
+        # --locked asserts uv.lock will remain unchanged, so a lockfile that has
+        # drifted from pyproject.toml fails the job. Do not relax this to
+        # --frozen, which only skips updating the lock and would not catch drift.
+        # --all-extras is a no-op today and becomes meaningful when #11 adds the
+        # routing extra.
+        run: uv sync --locked --all-extras --group dev
+
+      - name: Run tests
+        run: uv run pytest --cov
+
+  build:
+    name: Build wheel and sdist
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+
+      - name: Build
+        run: uv build
+
+      - name: Check the artifacts
+        # Packaging regressions the test suite cannot see: the 14 prompt template
+        # JSON files are package data, and a build-config change could silently
+        # stop shipping them.
+        run: |
+          set -euo pipefail
+          test -f dist/*.whl
+          test -f dist/*.tar.gz
+          json_count=$(unzip -l dist/*.whl | grep -c '\.json$')
+          echo "Template JSON files in wheel: $json_count"
+          if [ "$json_count" -ne 14 ]; then
+            echo "::error::expected 14 template JSON files in the wheel, found $json_count"
+            exit 1
+          fi

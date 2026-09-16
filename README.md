@@ -1,5 +1,7 @@
 # Bioinformatics Prompts
 
+[![Tests](https://github.com/geraldmc/bioinformatics_prompts/actions/workflows/tests.yml/badge.svg)](https://github.com/geraldmc/bioinformatics_prompts/actions/workflows/tests.yml)
+
 A Python package for generating and using bioinformatics-specific prompts with Anthropic's Claude AI.
 
 ## Overview
@@ -22,6 +24,10 @@ The package follows the OPTIMAL model (Optimization of Prompts Through Iterative
 
 ```
 bioinformatics-prompts/
+├── .github/
+│   └── workflows/
+│       └── tests.yml         # CI: test matrix + wheel build
+│
 ├── src/
 │   └── bioinformatics_prompts/
 │       ├── __init__.py        # Public API: ClaudeInteraction, BioinformaticsPrompt
@@ -305,6 +311,20 @@ uv run pytest
 # Run with a coverage report
 uv run pytest --cov
 ```
+
+### Continuous integration
+
+`.github/workflows/tests.yml` runs on every push and pull request:
+
+- **`test`** — the suite against the locked dependency set on Python 3.10, 3.11,
+  3.12, 3.13 and 3.14. Dependencies install with `uv sync --locked`, so a
+  `uv.lock` that has drifted from `pyproject.toml` fails the build rather than
+  being silently re-resolved.
+- **`build`** — `uv build`, then a check that the wheel still ships all 14
+  prompt template JSON files.
+
+No secrets are configured or required: the suite fakes every network-facing
+call, so CI never contacts the Claude API.
 
 ## Available Prompt Templates
 
