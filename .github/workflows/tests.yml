@@ -10,10 +10,24 @@ on:
 permissions:
   contents: read
 
+# Superseded runs are cancelled rather than left to finish: pushing three quick
+# fixups to a branch should not leave three full matrices running. Keyed on
+# github.ref, so a branch's push runs and its PR runs occupy separate groups and
+# never cancel each other. main is exempt — its runs are the record of what
+# actually landed, so they are allowed to complete.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   test:
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    # Jobs otherwise inherit a 6-hour default. The whole matrix finishes in well
+    # under a minute, so anything approaching this is a hang — most plausibly
+    # while downloading a managed CPython — and fail-fast: false means the other
+    # legs would keep burning runner time alongside it.
+    timeout-minutes: 15
     strategy:
       # Report every failing version, not just the first.
       fail-fast: false
@@ -51,6 +65,7 @@ jobs:
   build:
     name: Build wheel and sdist
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -67,9 +82,26 @@ jobs:
         # stop shipping them.
         run: |
           set -euo pipefail
-          test -f dist/*.whl
-          test -f dist/*.tar.gz
-          json_count=$(unzip -l dist/*.whl | grep -c '\.json$')
+          # Not `test -f dist/*.whl`: an unquoted glob expands to every match, so
+          # two wheels give "test: too many arguments" (reads as a packaging
+          # failure rather than a stale dist/), and zero matches leave the glob
+          # literal and fail with no message at all.
+          shopt -s nullglob
+          wheels=(dist/*.whl)
+          sdists=(dist/*.tar.gz)
+          if [ ${#wheels[@]} -ne 1 ]; then
+            echo "::error::expected exactly 1 wheel in dist/, found ${#wheels[@]}"
+            exit 1
+          fi
+          if [ ${#sdists[@]} -ne 1 ]; then
+            echo "::error::expected exactly 1 sdist in dist/, found ${#sdists[@]}"
+            exit 1
+          fi
+          # `|| true` is required, not defensive noise: grep -c exits 1 when it
+          # matches nothing, and under `set -euo pipefail` that aborts this
+          # script before the error annotation below can run — silencing the
+          # diagnostic in exactly the case this check exists to catch.
+          json_count=$(unzip -l "${wheels[0]}" | grep -c '\.json$' || true)
           echo "Template JSON files in wheel: $json_count"
           if [ "$json_count" -ne 14 ]; then
             echo "::error::expected 14 template JSON files in the wheel, found $json_count"
