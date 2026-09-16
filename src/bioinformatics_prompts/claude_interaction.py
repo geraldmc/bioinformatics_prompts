@@ -1,12 +1,14 @@
 import os
 import json
-import glob
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
+from bioinformatics_prompts.exceptions import RoutingUnavailableError
+from bioinformatics_prompts.matching import match_area
 from bioinformatics_prompts.prompt.templates.prompt_template import BioinformaticsPrompt
-from bioinformatics_prompts.dspy_modules.lm import configure_claude_lm
-from bioinformatics_prompts.dspy_modules.router import TemplateRouter, match_area
+
+# NOTE: dspy is deliberately NOT imported here. It is an optional `routing`
+# extra, and importing this module must not pull it in — see route_template().
 
 # Last-resort default model, used only if a model isn't passed explicitly
 # and querying the Models API for a current one fails (see
@@ -145,12 +147,27 @@ class ClaudeInteraction:
 
     Returns: The matched template dict (same shape as list_available_templates()
         entries) if a match is found, None otherwise.
+
+    Raises:
+        RoutingUnavailableError: if the optional `routing` extra is not
+            installed. This is deliberately not folded into the None return,
+            which already means "no template matched" — a configuration error
+            and a routing miss are different outcomes.
     """
     templates = self.list_available_templates()
 
     if not templates:
         print(f"No prompt templates found in {self.prompt_dir}")
         return None
+
+    # Deferred: these reach dspy, which ships only with the `routing` extra.
+    # Both dspy_modules.lm and dspy_modules.router touch dspy at module scope
+    # (router.py subclasses dspy.Signature), so neither can be imported above.
+    try:
+        from bioinformatics_prompts.dspy_modules.lm import configure_claude_lm
+        from bioinformatics_prompts.dspy_modules.router import TemplateRouter
+    except ImportError as e:
+        raise RoutingUnavailableError() from e
 
     model = self.default_model or FALLBACK_MODEL
     configure_claude_lm(model=model, api_key=self.api_key)

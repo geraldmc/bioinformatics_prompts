@@ -2,42 +2,33 @@
 
 None of these tests call the real Claude API or a real dspy.LM; DSPy's
 DummyLM stands in for the LM backend everywhere a DSPy call happens.
+
+The whole module requires the optional `routing` extra, so it skips rather than
+erroring at collection in a core-only environment. Tests that do not need dspy
+belong outside this file.
 """
 
-import dspy
 import pytest
-from dspy.utils.dummies import DummyLM
 
-from bioinformatics_prompts.claude_interaction import ClaudeInteraction
-from bioinformatics_prompts.dspy_modules.router import TemplateRouter, match_area
-from bioinformatics_prompts.prompt.templates.prompt_template import BioinformaticsPrompt, FewShotExample
+dspy = pytest.importorskip("dspy", reason="requires the 'routing' extra")
+DummyLM = pytest.importorskip(
+    "dspy.utils.dummies", reason="requires the 'routing' extra"
+).DummyLM
+
+from bioinformatics_prompts.claude_interaction import ClaudeInteraction  # noqa: E402
+from bioinformatics_prompts.dspy_modules.router import TemplateRouter  # noqa: E402
+from bioinformatics_prompts.prompt.templates.prompt_template import (  # noqa: E402
+    BioinformaticsPrompt,
+    FewShotExample,
+)
 
 
-# ---------------------------------------------------------------------------
-# match_area — plain-dict unit tests, no DSPy involved at all
-# ---------------------------------------------------------------------------
-
+# match_area's own unit tests live in tests/test_matching.py — it needs no DSPy,
+# so keeping its tests here would skip them in a core-only install.
 AREAS = [
     {"research_area": "Genomics", "description": "DNA sequencing and assembly"},
     {"research_area": "Single-Cell Genomics", "description": "Single-cell RNA-seq analysis"},
 ]
-
-
-def test_match_area_exact_match():
-    assert match_area("Genomics", AREAS) == AREAS[0]
-
-
-def test_match_area_case_insensitive():
-    assert match_area("genomics", AREAS) == AREAS[0]
-
-
-def test_match_area_substring_fallback():
-    # Predicted string contains extra text around a listed area name.
-    assert match_area("The best match is Single-Cell Genomics.", AREAS) == AREAS[1]
-
-
-def test_match_area_no_match_returns_none():
-    assert match_area("Astrophysics", AREAS) is None
 
 
 # ---------------------------------------------------------------------------
@@ -135,7 +126,7 @@ def test_list_available_templates_includes_description(prompt_dir):
 def test_route_template_returns_matched_template(prompt_dir, monkeypatch):
     dummy_lm = DummyLM([{"research_area": "Genomics"}])
     monkeypatch.setattr(
-        "bioinformatics_prompts.claude_interaction.configure_claude_lm",
+        "bioinformatics_prompts.dspy_modules.lm.configure_claude_lm",
         _stub_configure_claude_lm(dummy_lm),
     )
 
@@ -150,7 +141,7 @@ def test_route_template_returns_matched_template(prompt_dir, monkeypatch):
 def test_route_template_no_match_returns_none(prompt_dir, monkeypatch):
     dummy_lm = DummyLM([{"research_area": "Astrophysics"}])
     monkeypatch.setattr(
-        "bioinformatics_prompts.claude_interaction.configure_claude_lm",
+        "bioinformatics_prompts.dspy_modules.lm.configure_claude_lm",
         _stub_configure_claude_lm(dummy_lm),
     )
 
@@ -164,7 +155,7 @@ def test_route_template_no_match_returns_none(prompt_dir, monkeypatch):
 def test_load_prompt_template_by_query_loads_matched_template(prompt_dir, monkeypatch):
     dummy_lm = DummyLM([{"research_area": "Single-Cell Genomics"}])
     monkeypatch.setattr(
-        "bioinformatics_prompts.claude_interaction.configure_claude_lm",
+        "bioinformatics_prompts.dspy_modules.lm.configure_claude_lm",
         _stub_configure_claude_lm(dummy_lm),
     )
 
@@ -180,7 +171,7 @@ def test_load_prompt_template_by_query_loads_matched_template(prompt_dir, monkey
 def test_load_prompt_template_by_query_no_match_returns_none(prompt_dir, monkeypatch):
     dummy_lm = DummyLM([{"research_area": "Astrophysics"}])
     monkeypatch.setattr(
-        "bioinformatics_prompts.claude_interaction.configure_claude_lm",
+        "bioinformatics_prompts.dspy_modules.lm.configure_claude_lm",
         _stub_configure_claude_lm(dummy_lm),
     )
 

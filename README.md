@@ -33,7 +33,9 @@ bioinformatics-prompts/
 │       ├── __init__.py        # Public API: ClaudeInteraction, BioinformaticsPrompt
 │       ├── claude_interaction.py  # Claude API integration
 │       ├── cli.py                 # Click CLI entry point (chat/list-templates/route)
-│       ├── dspy_modules/           # DSPy-based automatic template routing
+│       ├── exceptions.py          # Exception hierarchy (stdlib-only)
+│       ├── matching.py            # Research-area name matching (no DSPy)
+│       ├── dspy_modules/           # DSPy-based automatic template routing ([routing] extra)
 │       │   ├── __init__.py
 │       │   ├── lm.py
 │       │   └── router.py
@@ -124,6 +126,34 @@ Then import it like any other package:
 
 ```python
 from bioinformatics_prompts import ClaudeInteraction, BioinformaticsPrompt
+```
+
+#### The `routing` extra
+
+Automatic template routing is **optional**, because it depends on DSPy, which
+pulls in `litellm` and through it the OpenAI SDK. The base install deliberately
+skips all of that — roughly 20 packages instead of 70, and an import that costs
+milliseconds rather than half a second.
+
+```bash
+# Base install: everything except automatic routing
+uv add git+https://github.com/geraldmc/bioinformatics_prompts.git
+
+# With routing
+uv add "bioinformatics-prompts[routing] @ git+https://github.com/geraldmc/bioinformatics_prompts.git"
+```
+
+Without the extra, every feature except `route_template()` and
+`load_prompt_template_by_query()` works normally. Those two raise
+`RoutingUnavailableError` (a subclass of `ImportError`) with an install hint:
+
+```python
+from bioinformatics_prompts.exceptions import RoutingUnavailableError
+
+try:
+    matched = interaction.route_template("How do I call variants?")
+except RoutingUnavailableError:
+    matched = None  # fall back to explicit template selection
 ```
 
 ### CLI usage
@@ -217,6 +247,10 @@ network, invalid key, etc.), it falls back to a hardcoded constant
 skip this resolution entirely.
 
 #### Automatic template routing
+
+Requires the optional `routing` extra (see
+[The `routing` extra](#the-routing-extra) above); without it these calls raise
+`RoutingUnavailableError`.
 
 Instead of the interactive numbered menu (`load_prompt_template(interactive=True)`),
 you can route a user's query directly to the best-matching template using a
@@ -320,8 +354,13 @@ uv run pytest --cov
   3.12, 3.13 and 3.14. Dependencies install with `uv sync --locked`, so a
   `uv.lock` that has drifted from `pyproject.toml` fails the build rather than
   being silently re-resolved.
+- **`core-only`** — installs without the `routing` extra and asserts that
+  importing the package pulls in neither `dspy` nor the OpenAI SDK, that routing
+  fails with an actionable error, and that the rest of the suite still passes.
+  This is the configuration consumers get and the one a developer checkout never
+  reproduces, since `dspy` stays in the `dev` group.
 - **`build`** — `uv build`, then a check that the wheel still ships all 14
-  prompt template JSON files.
+  prompt template JSON files and that the installed package can load them.
 
 No secrets are configured or required: the suite fakes every network-facing
 call, so CI never contacts the Claude API.

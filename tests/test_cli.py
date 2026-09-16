@@ -108,6 +108,25 @@ def test_route_miss(runner, monkeypatch):
     assert result.exit_code == 0
 
 
+def test_route_reports_missing_extra_without_a_traceback(runner, monkeypatch):
+    """A core-only install running `route` gets an actionable message, not a stack trace."""
+    from bioinformatics_prompts.exceptions import RoutingUnavailableError
+
+    def _raise(self, query):
+        raise RoutingUnavailableError(
+            "Template routing requires the 'routing' extra. "
+            "Install it with: uv add 'bioinformatics-prompts[routing]'"
+        )
+
+    monkeypatch.setattr(ClaudeInteraction, "route_template", _raise)
+
+    result = runner.invoke(cli, ["--api-key", "test-key", "route", "align some reads"])
+
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    assert "routing" in result.output
+
+
 def test_route_does_not_also_chat(runner, monkeypatch):
     monkeypatch.setattr(
         ClaudeInteraction, "route_template", lambda self, query: {"research_area": "Genomics"}
