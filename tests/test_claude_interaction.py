@@ -5,8 +5,7 @@ None of these tests call the real Claude API; network-facing calls are faked.
 
 import pytest
 
-import bioinformatics_prompts.claude_interaction as claude_interaction_module
-from bioinformatics_prompts.claude_interaction import FALLBACK_MODEL, ClaudeInteraction, main
+from bioinformatics_prompts.claude_interaction import FALLBACK_MODEL, ClaudeInteraction
 
 
 class _FakeModel:
@@ -78,6 +77,23 @@ def test_missing_api_key_raises(monkeypatch):
         ClaudeInteraction(api_key=None, prompt_dir="prompt")
 
 
+def test_require_api_key_false_skips_raise_with_no_key(monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("CLAUDE_API_KEY", raising=False)
+
+    interaction = ClaudeInteraction(api_key=None, prompt_dir="prompt", require_api_key=False)
+
+    assert interaction.api_key is None
+
+
+def test_require_api_key_false_still_resolves_key_if_present(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "env-key")
+
+    interaction = ClaudeInteraction(api_key=None, prompt_dir="prompt", require_api_key=False)
+
+    assert interaction.api_key == "env-key"
+
+
 def test_default_model_not_resolved_at_construction():
     interaction = ClaudeInteraction(api_key="test-key", prompt_dir="prompt")
 
@@ -120,19 +136,6 @@ def test_default_prompt_dir_is_cwd_independent(monkeypatch, tmp_path):
     templates = interaction.list_available_templates()
 
     assert len(templates) > 0
-
-
-def test_main_loads_dotenv_and_starts_conversation(monkeypatch):
-    calls = []
-    monkeypatch.setattr(claude_interaction_module, "load_dotenv", lambda: calls.append("load_dotenv"))
-    monkeypatch.setattr(
-        ClaudeInteraction, "start_conversation", lambda self: calls.append("start_conversation")
-    )
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
-
-    main()
-
-    assert calls == ["load_dotenv", "start_conversation"]
 
 
 def test_send_to_claude_caches_resolved_model(monkeypatch):

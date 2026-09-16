@@ -115,14 +115,37 @@ Then import it like any other package:
 from bioinformatics_prompts import ClaudeInteraction, BioinformaticsPrompt
 ```
 
-### Console script
+### CLI usage
 
-Installing the package also installs a `bioinformatics-prompts` command that
-starts the interactive conversation mode:
+Installing the package also installs a `bioinformatics-prompts` command with
+three subcommands:
 
 ```bash
+# Start the interactive conversation mode (also the default with no subcommand)
+uv run bioinformatics-prompts chat
 uv run bioinformatics-prompts
+
+# List available prompt templates (no API key required)
+uv run bioinformatics-prompts list-templates
+
+# Route a query to the best-matching template without starting a chat
+uv run bioinformatics-prompts route "How do I call variants from a VCF file?"
 ```
+
+Global options, available before any subcommand, map onto
+`ClaudeInteraction`'s constructor arguments:
+
+```bash
+uv run bioinformatics-prompts --api-key YOUR_KEY --model claude-sonnet-5 --prompt-dir /path/to/templates chat
+```
+
+- `--api-key` — Claude API key. Defaults to the `CLAUDE_API_KEY` or
+  `ANTHROPIC_API_KEY` environment variable (or a `.env` file).
+- `--model` — Default Claude model to use.
+- `--prompt-dir` — Directory containing prompt template JSON files.
+
+`list-templates` only reads local template files, so it works without an API
+key configured; `chat` and `route` require one.
 
 ## Usage
 

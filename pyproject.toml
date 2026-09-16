@@ -10,10 +10,11 @@ dependencies = [
     "loguru>=0.7",
     "ipython>=8.39.0",
     "dspy>=3.3.0",
+    "click>=8.4.2",
 ]
 
 [project.scripts]
-bioinformatics-prompts = "bioinformatics_prompts.claude_interaction:main"
+bioinformatics-prompts = "bioinformatics_prompts.cli:cli"
 
 [dependency-groups]
 dev = [
