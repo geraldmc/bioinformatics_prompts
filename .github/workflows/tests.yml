@@ -1,0 +1,136 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+# The suite fakes every network-facing call (tests/test_claude_interaction.py
+# substitutes a fake anthropic client; tests/test_router.py uses DSPy's DummyLM),
+# so no API key is needed here and none should ever be added.
+permissions:
+  contents: read
+
+# Superseded runs are cancelled rather than left to finish: pushing three quick
+# fixups to a branch should not leave three full matrices running. Keyed on
+# github.ref, so a branch's push runs and its PR runs occupy separate groups and
+# never cancel each other. main is exempt — its runs are the record of what
+# actually landed, so they are allowed to complete.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    # Jobs otherwise inherit a 6-hour default. The whole matrix finishes in well
+    # under a minute, so anything approaching this is a hang — most plausibly
+    # while downloading a managed CPython — and fail-fast: false means the other
+    # legs would keep burning runner time alongside it.
+    timeout-minutes: 15
+    strategy:
+      # Report every failing version, not just the first.
+      fail-fast: false
+      matrix:
+        # Every version requires-python = ">=3.10" claims. uv.lock resolves
+        # differently across this range (ipython splits 8.39/9.16 at 3.11,
+        # async-timeout below 3.11, typing-extensions below 3.13), so the floor
+        # and ceiling genuinely install different dependency sets.
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install uv and set the Python version
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          # "auto" is the default: caches on GitHub-hosted runners except for
+          # release, tag push, pull_request_target and workflow_run, where a
+          # poisoned cache would be a security problem. Stated explicitly so the
+          # behaviour is visible rather than inherited. Note "tag push" — an
+          # ordinary branch push caches, a tag push does not.
+          enable-cache: "auto"
+
+      - name: Install the locked dependency set
+        # --locked asserts uv.lock will remain unchanged, so a lockfile that has
+        # drifted from pyproject.toml fails the job. Do not relax this to
+        # --frozen, which only skips updating the lock and would not catch drift.
+        # --all-extras is a no-op today and becomes meaningful when #11 adds the
+        # routing extra.
+        run: uv sync --locked --all-extras --group dev
+
+      - name: Run tests
+        run: uv run pytest --cov
+
+  build:
+    name: Build wheel and sdist
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+
+      - name: Build
+        run: uv build
+
+      - name: Check the artifacts
+        id: artifacts
+        # Packaging regressions the test suite cannot see: the 14 prompt template
+        # JSON files are package data, and a build-config change could silently
+        # stop shipping them.
+        run: |
+          set -euo pipefail
+          # Not `test -f dist/*.whl`: an unquoted glob expands to every match, so
+          # two wheels give "test: too many arguments" (reads as a packaging
+          # failure rather than a stale dist/), and zero matches leave the glob
+          # literal and fail with no message at all.
+          shopt -s nullglob
+          wheels=(dist/*.whl)
+          sdists=(dist/*.tar.gz)
+          if [ ${#wheels[@]} -ne 1 ]; then
+            echo "::error::expected exactly 1 wheel in dist/, found ${#wheels[@]}"
+            exit 1
+          fi
+          if [ ${#sdists[@]} -ne 1 ]; then
+            echo "::error::expected exactly 1 sdist in dist/, found ${#sdists[@]}"
+            exit 1
+          fi
+          # `|| true` is required, not defensive noise: grep -c exits 1 when it
+          # matches nothing, and under `set -euo pipefail` that aborts this
+          # script before the error annotation below can run — silencing the
+          # diagnostic in exactly the case this check exists to catch.
+          json_count=$(unzip -l "${wheels[0]}" | grep -c '\.json$' || true)
+          echo "Template JSON files in wheel: $json_count"
+          if [ "$json_count" -ne 14 ]; then
+            echo "::error::expected 14 template JSON files in the wheel, found $json_count"
+            exit 1
+          fi
+          echo "wheel=${wheels[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Check the installed wheel can load its templates
+        # The count above proves the JSON files are *in* the wheel, not that they
+        # land where the loader looks: claude_interaction.py resolves them as
+        # Path(__file__).resolve().parent / "prompt". A build-backend change that
+        # relocated them (into a .data/ tree, say) would keep the count at 14
+        # while the installed package loaded zero prompts. So install the wheel
+        # for real and ask the package itself.
+        run: |
+          set -euo pipefail
+          venv="${RUNNER_TEMP:-/tmp}/wheelcheck"
+          rm -rf "$venv"
+          uv venv "$venv"
+          uv pip install --python "$venv/bin/python" "${{ steps.artifacts.outputs.wheel }}"
+          "$venv/bin/python" - <<'PY'
+          from bioinformatics_prompts import ClaudeInteraction
+
+          templates = ClaudeInteraction(require_api_key=False).list_available_templates()
+          if len(templates) != 14:
+              raise SystemExit(
+                  f"::error::installed wheel loads {len(templates)} templates, expected 14"
+              )
+          print(f"installed wheel loads {len(templates)} templates")
+          PY
