@@ -45,10 +45,11 @@ jobs:
         uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
           python-version: ${{ matrix.python-version }}
-          # "auto" is the default: caches on push/pull_request, and disables
-          # caching for pull_request_target/workflow_run/release, where a
+          # "auto" is the default: caches on GitHub-hosted runners except for
+          # release, tag push, pull_request_target and workflow_run, where a
           # poisoned cache would be a security problem. Stated explicitly so the
-          # behaviour is visible rather than inherited.
+          # behaviour is visible rather than inherited. Note "tag push" — an
+          # ordinary branch push caches, a tag push does not.
           enable-cache: "auto"
 
       - name: Install the locked dependency set
@@ -77,6 +78,7 @@ jobs:
         run: uv build
 
       - name: Check the artifacts
+        id: artifacts
         # Packaging regressions the test suite cannot see: the 14 prompt template
         # JSON files are package data, and a build-config change could silently
         # stop shipping them.
@@ -107,3 +109,28 @@ jobs:
             echo "::error::expected 14 template JSON files in the wheel, found $json_count"
             exit 1
           fi
+          echo "wheel=${wheels[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Check the installed wheel can load its templates
+        # The count above proves the JSON files are *in* the wheel, not that they
+        # land where the loader looks: claude_interaction.py resolves them as
+        # Path(__file__).resolve().parent / "prompt". A build-backend change that
+        # relocated them (into a .data/ tree, say) would keep the count at 14
+        # while the installed package loaded zero prompts. So install the wheel
+        # for real and ask the package itself.
+        run: |
+          set -euo pipefail
+          venv="${RUNNER_TEMP:-/tmp}/wheelcheck"
+          rm -rf "$venv"
+          uv venv "$venv"
+          uv pip install --python "$venv/bin/python" "${{ steps.artifacts.outputs.wheel }}"
+          "$venv/bin/python" - <<'PY'
+          from bioinformatics_prompts import ClaudeInteraction
+
+          templates = ClaudeInteraction(require_api_key=False).list_available_templates()
+          if len(templates) != 14:
+              raise SystemExit(
+                  f"::error::installed wheel loads {len(templates)} templates, expected 14"
+              )
+          print(f"installed wheel loads {len(templates)} templates")
+          PY
