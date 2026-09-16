@@ -7,18 +7,31 @@ requires-python = ">=3.10"
 dependencies = [
     "anthropic>=0.49.0",
     "python-dotenv>=1.1.0",
-    "ipython>=8.39.0",
-    "dspy>=3.3.0",
     "click>=8.4.2",
 ]
+
+[project.optional-dependencies]
+# Template routing only. dspy pulls in litellm and, through it, the OpenAI SDK,
+# which no consumer of this Claude-focused library should pay for unless they
+# actually route.
+routing = ["dspy>=3.3.0"]
 
 [project.scripts]
 bioinformatics-prompts = "bioinformatics_prompts.cli:cli"
 
 [dependency-groups]
-dev = [
+# Split so the core-only CI job can install pytest *without* dspy:
+#   uv sync --no-default-groups --group test
+# A bare `uv sync` still gets dev, so the contributor loop is unchanged. dspy is
+# here as well as in the extra because uv has no `default-extras` setting, and
+# without it tests/test_router.py would be unimportable after a plain sync.
+test = [
     "pytest>=8.0",
     "pytest-cov>=6.0",
+]
+dev = [
+    { include-group = "test" },
+    "dspy>=3.3.0",
 ]
 
 [build-system]

@@ -63,6 +63,66 @@ jobs:
       - name: Run tests
         run: uv run pytest --cov
 
+  core-only:
+    # The configuration consumers actually get, and the one no developer machine
+    # has by default: dspy stays in the dev group so a bare `uv sync` installs
+    # it, which means this guard is only testable here.
+    name: Core-only install (no routing extra)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          enable-cache: "auto"
+
+      - name: Install without the routing extra
+        # --no-default-groups drops dev (which carries dspy); --group test adds
+        # pytest back. The two are split in pyproject.toml precisely so this
+        # combination is possible.
+        run: uv sync --locked --no-default-groups --group test
+
+      - name: Assert dspy is absent from the import graph
+        run: |
+          set -euo pipefail
+          uv run --no-default-groups --group test python - <<'PY'
+          import sys
+
+          import bioinformatics_prompts  # noqa: F401
+
+          if "dspy" in sys.modules:
+              raise SystemExit("::error::importing the package pulled in dspy")
+          if "openai" in sys.modules:
+              raise SystemExit("::error::importing the package pulled in the OpenAI SDK")
+          print(f"clean import: {len(sys.modules)} modules, no dspy, no openai")
+          PY
+
+      - name: Assert routing fails with an actionable error
+        run: |
+          set -euo pipefail
+          uv run --no-default-groups --group test python - <<'PY'
+          from bioinformatics_prompts import ClaudeInteraction
+          from bioinformatics_prompts.exceptions import RoutingUnavailableError
+
+          interaction = ClaudeInteraction(require_api_key=False)
+          if len(interaction.list_available_templates()) != 14:
+              raise SystemExit("::error::core-only install cannot list templates")
+
+          try:
+              interaction.route_template("assemble a genome")
+          except RoutingUnavailableError as e:
+              assert "routing" in str(e), "error must name the extra"
+              print("routing correctly unavailable:", str(e).splitlines()[0])
+          else:
+              raise SystemExit("::error::route_template did not raise without the extra")
+          PY
+
+      - name: Run the tests that do not need the extra
+        run: uv run --no-default-groups --group test pytest
+
   build:
     name: Build wheel and sdist
     runs-on: ubuntu-latest

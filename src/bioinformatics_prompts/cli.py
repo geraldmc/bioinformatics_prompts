@@ -2,6 +2,7 @@ import click
 from dotenv import load_dotenv
 
 from bioinformatics_prompts.claude_interaction import ClaudeInteraction
+from bioinformatics_prompts.exceptions import RoutingUnavailableError
 
 
 def _build_interaction(ctx, *, require_api_key=True):
@@ -53,6 +54,11 @@ def list_templates(ctx):
 def route(ctx, query):
     """Route a query to the best-matching prompt template."""
     interaction = _build_interaction(ctx)
-    matched = interaction.route_template(query)
+    try:
+        matched = interaction.route_template(query)
+    except RoutingUnavailableError as e:
+        # A missing extra is a setup problem, not a crash: show the install
+        # hint rather than a traceback.
+        raise click.ClickException(str(e)) from e
     if matched:
         click.echo(f"Matched template: {matched['research_area']}")
