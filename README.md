@@ -26,6 +26,11 @@ bioinformatics-prompts/
 │   └── bioinformatics_prompts/
 │       ├── __init__.py        # Public API: ClaudeInteraction, BioinformaticsPrompt
 │       ├── claude_interaction.py  # Claude API integration
+│       ├── cli.py                 # Click CLI entry point (chat/list-templates/route)
+│       ├── dspy_modules/           # DSPy-based automatic template routing
+│       │   ├── __init__.py
+│       │   ├── lm.py
+│       │   └── router.py
 │       ├── prompt/                # Prompt implementations
 │       │   ├── __init__.py
 │       │   ├── templates/         # Template definitions
@@ -70,8 +75,10 @@ bioinformatics-prompts/
 ├── tests/                    # Test suite (pytest)
 │   ├── __init__.py
 │   ├── conftest.py
+│   ├── test_cli.py
 │   ├── test_claude_interaction.py
 │   ├── test_prompt_template.py
+│   ├── test_router.py
 │   ├── test_templates_importable.py
 │   └── test_validation.py
 │
@@ -224,8 +231,9 @@ loaded = interaction.load_prompt_template_by_query(
 This uses `dspy.LM("anthropic/<model>", ...)` under the hood (see
 `dspy_modules/lm.py` and `dspy_modules/router.py`), resolving the model the
 same way as `send_to_claude` (`self.default_model` if set, else
-`FALLBACK_MODEL`). It is not yet wired into `start_conversation()` or the
-`bioinformatics-prompts` console script — those still use the interactive menu.
+`FALLBACK_MODEL`). The `bioinformatics-prompts route` subcommand exercises
+this directly (see [CLI usage](#cli-usage) above); it is not yet wired into
+`start_conversation()`'s interactive loop, which still uses the numbered menu.
 
 ### Creating a Custom Template
 
