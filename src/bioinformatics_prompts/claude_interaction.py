@@ -4,8 +4,6 @@ import glob
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
-from dotenv import load_dotenv
-
 from bioinformatics_prompts.prompt.templates.prompt_template import BioinformaticsPrompt
 from bioinformatics_prompts.dspy_modules.lm import configure_claude_lm
 from bioinformatics_prompts.dspy_modules.router import TemplateRouter, match_area
@@ -20,7 +18,7 @@ class ClaudeInteraction:
   """Class for interacting with Claude API for bioinformatics prompts."""
 
   def __init__(self, api_key: Optional[str] = None, prompt_dir: Optional[str] = None,
-              model: Optional[str] = None):
+              model: Optional[str] = None, require_api_key: bool = True):
     """
     Initialize the Claude interaction class.
 
@@ -33,9 +31,13 @@ class ClaudeInteraction:
             lazily on first use (see _resolve_default_model) rather than
             at construction time, so instantiating this class never
             requires network access.
+        require_api_key: If False, skip raising when no API key is found,
+            leaving self.api_key as None. For callers that only need
+            functionality that doesn't touch the Claude API (e.g. listing
+            templates).
     """
     self.api_key = api_key or os.environ.get("CLAUDE_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
-    if not self.api_key:
+    if require_api_key and not self.api_key:
         raise ValueError("Claude API key not provided or found in environment variables")
 
     self.prompt_dir = prompt_dir or str(Path(__file__).resolve().parent / "prompt")
@@ -420,24 +422,3 @@ class ClaudeInteraction:
         
         # Print Claude's response
         print("\nClaude:", response)
-
-
-def main() -> None:
-    """Entry point for the `bioinformatics-prompts` console script."""
-    # Try to load API key from .env file
-    load_dotenv()
-
-    # Initialize the interaction class
-    try:
-        interaction = ClaudeInteraction()
-
-        # Start an interactive conversation
-        interaction.start_conversation()
-    except ValueError as e:
-        print(f"Error: {str(e)}")
-        print("Please set your ANTHROPIC_API_KEY or CLAUDE_API_KEY environment variable.")
-        print("You can create a .env file with: ANTHROPIC_API_KEY=your_key_here")
-
-
-if __name__ == "__main__":
-    main()
