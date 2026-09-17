@@ -82,9 +82,15 @@ def run_chat(interaction: ClaudeInteraction, use_template: bool = True) -> None:
     interaction.reset_conversation()
 
     if use_template and interaction.prompt_template is None:
-        if not _load_selected_template(interaction):
-            click.echo("No template selected. Exiting conversation.")
-            return
+        # Retry rather than eject: a malformed template file is a reason to pick
+        # again, not to refuse to start.
+        while interaction.prompt_template is None:
+            try:
+                if not _load_selected_template(interaction):
+                    click.echo("No template selected. Exiting conversation.")
+                    return
+            except BioinformaticsPromptsError as e:
+                click.echo(f"Error: {e}", err=True)
 
     click.echo("\n=== Starting conversation with Claude ===")
     click.echo("Type 'quit', 'exit', or 'bye' to end the conversation")
@@ -106,7 +112,12 @@ def run_chat(interaction: ClaudeInteraction, use_template: bool = True) -> None:
             continue
 
         if command == "template":
-            _load_selected_template(interaction)
+            # A malformed template file must not end the session and discard
+            # the conversation so far — report it and let the user pick again.
+            try:
+                _load_selected_template(interaction)
+            except BioinformaticsPromptsError as e:
+                click.echo(f"Error: {e}", err=True)
             continue
 
         # Errors are reported and the loop continues: a failed turn should not

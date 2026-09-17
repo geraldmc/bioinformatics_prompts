@@ -272,3 +272,35 @@ def test_route_miss_is_reported_not_silent(tmp_path, monkeypatch, sample_prompt)
     assert result.exit_code == 0
     assert result.output.strip(), "a miss produced no output at all"
     assert "No matching template" in result.output
+
+
+def test_bad_template_pick_does_not_end_the_chat_session(tmp_path, monkeypatch, sample_prompt):
+    """A malformed template must not destroy an in-progress conversation.
+
+    Uses a file that parses as JSON but fails the model schema, so it survives
+    list_available_templates()' JSONDecodeError filter and actually reaches
+    load_template_file() — the path that raises TemplateLoadError.
+    """
+    from bioinformatics_prompts import cli_chat
+
+    (tmp_path / "good_prompt.json").write_text(sample_prompt.to_json())
+    (tmp_path / "broken_prompt.json").write_text('{"research_area": "Broken Area"}')
+
+    interaction = ClaudeInteraction(api_key="test-key", prompt_dir=str(tmp_path))
+    templates = interaction.list_available_templates()
+    broken = next(t for t in templates if t["research_area"] == "Broken Area")
+
+    # The bad file is listed, so the picker can reach it.
+    assert broken is not None
+    with pytest.raises(TemplateLoadError):
+        interaction.load_template_file(broken)
+
+    # Drive the REPL: load the good template, then pick the broken one, then quit.
+    good_id = next(t["id"] for t in templates if t["research_area"] == "Test Area")
+    replies = iter([str(good_id), "template", str(broken["id"]), "quit"])
+    monkeypatch.setattr(cli_chat.click, "prompt", lambda *a, **kw: next(replies))
+
+    cli_chat.run_chat(interaction)  # must return normally, not raise
+
+    # The good template is still loaded and history survived the bad pick.
+    assert interaction.prompt_template.research_area == "Test Area"
