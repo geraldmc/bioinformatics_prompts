@@ -36,8 +36,8 @@ def select_template(interaction: ClaudeInteraction) -> Optional[Dict[str, str]]:
     templates = interaction.list_available_templates()
 
     click.echo("\nAvailable research areas (prompt templates):")
-    for template in templates:
-        click.echo(f"{template['id']}. {template['research_area']}")
+    for number, template in enumerate(templates, 1):
+        click.echo(f"{number}. {template['research_area']}")
 
     while True:
         choice = click.prompt(
@@ -55,18 +55,17 @@ def select_template(interaction: ClaudeInteraction) -> Optional[Dict[str, str]]:
             click.echo("Please enter a valid number")
             continue
 
-        selected = next((t for t in templates if t["id"] == choice_idx), None)
-        if selected is None:
-            # Phrased from the ids that actually exist, not from the count.
-            # list_available_templates() numbers files before discarding the
-            # unreadable ones, so the ids can be non-contiguous: two templates
-            # may be numbered 1 and 3, and "between 1 and 2" would then reject
-            # a number the menu just offered.
-            valid = ", ".join(str(t["id"]) for t in templates)
-            click.echo(f"Invalid selection. Please choose one of: {valid}")
+        if not 1 <= choice_idx <= len(templates):
+            # The menu numbers the list it just printed, so the range is always
+            # 1..len and always contiguous. That was not true while the number
+            # came from the library: it was assigned before unreadable files
+            # were discarded, so the menu could offer 1 and 3 and then reject 2.
+            click.echo(
+                f"Invalid selection. Please choose a number between 1 and {len(templates)}"
+            )
             continue
 
-        return selected
+        return templates[choice_idx - 1]
 
 
 def _load_selected_template(interaction: ClaudeInteraction) -> bool:

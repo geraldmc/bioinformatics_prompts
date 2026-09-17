@@ -65,8 +65,13 @@ class ClaudeInteraction:
     """
     List all available prompt templates in the prompt directory,
     sorted alphabetically by filename.
-    
-    Returns: List of dictionaries with template information (filename, research_area)
+
+    Entries describe a template, not its position in this list: adding a
+    template must not change any other entry. Code presenting a numbered menu
+    should number the list itself — see cli_chat.select_template.
+
+    Returns: List of dictionaries with template information
+        (filename, research_area, description)
     """
     templates = []
     
@@ -76,16 +81,15 @@ class ClaudeInteraction:
     # Sort files alphabetically by stem (filename without extension and path)
     json_files.sort(key=lambda path: path.stem.lower())
     
-    for idx, file_path in enumerate(json_files, 1):
+    for file_path in json_files:
       try:
         with open(file_path, 'r') as f:
             data = json.load(f)
-            
+
         # Get "research_area" from the JSON data if available, otherwise use "Unknown"
         research_area = data.get("research_area", "Unknown")
-        
+
         templates.append({
-            "id": idx,
             "filename": str(file_path),
             "research_area": research_area,
             "description": data.get("description", "")
