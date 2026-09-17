@@ -12,7 +12,7 @@ from bioinformatics_prompts.exceptions import (
     TemplateNotFoundError,
 )
 from bioinformatics_prompts.matching import match_area
-from bioinformatics_prompts.prompt.templates.prompt_template import BioinformaticsPrompt
+from bioinformatics_prompts.prompt_template import BioinformaticsPrompt
 
 # NOTE: dspy is deliberately NOT imported here. It is an optional `routing`
 # extra, and importing this module must not pull it in — see route_template().

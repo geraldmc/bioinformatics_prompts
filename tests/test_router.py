@@ -17,7 +17,7 @@ DummyLM = pytest.importorskip(
 
 from bioinformatics_prompts.claude_interaction import ClaudeInteraction  # noqa: E402
 from bioinformatics_prompts.dspy_modules.router import TemplateRouter  # noqa: E402
-from bioinformatics_prompts.prompt.templates.prompt_template import (  # noqa: E402
+from bioinformatics_prompts.prompt_template import (  # noqa: E402
     BioinformaticsPrompt,
     FewShotExample,
 )

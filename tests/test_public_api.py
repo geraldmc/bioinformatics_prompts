@@ -9,7 +9,11 @@ inert until a PEP 561 marker ships, so a wrong one can sit unnoticed and then
 start being believed the moment `py.typed` lands (#13).
 """
 
+import importlib
+import pkgutil
 import typing
+
+import pytest
 
 from bioinformatics_prompts import ClaudeInteraction
 from bioinformatics_prompts.claude_interaction import TemplateInfo
@@ -50,3 +54,47 @@ def test_template_entry_is_a_plain_dict(tmp_path, sample_prompt):
     ).list_available_templates()[0]
 
     assert type(entry) is dict
+
+
+# ---------------------------------------------------------------------------
+# Where things live
+# ---------------------------------------------------------------------------
+
+
+def test_data_model_is_not_in_the_template_data_package():
+    """The model moved to bioinformatics_prompts.prompt_template.
+
+    It used to sit in prompt/templates/ beside the 14 template *content*
+    modules, so reaching FewShotExample — the element type of
+    BioinformaticsPrompt's own `examples` argument — took five path segments
+    through a directory of data.
+    """
+    importlib.import_module("bioinformatics_prompts.prompt_template")
+
+    # Assembled rather than written out, so a future search-and-replace over
+    # the old dotted path cannot quietly turn this into the new one.
+    old_path = ".".join(
+        ["bioinformatics_prompts", "prompt", "templates", "prompt_template"]
+    )
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module(old_path)
+
+
+def test_template_package_holds_only_template_data():
+    """Every module under prompt/templates/ defines a template, nothing else.
+
+    This is what lets that directory be excluded from coverage wholesale (#13)
+    rather than by a hand-maintained list that goes stale whenever a template
+    is added. The previous exception was prompt_template.py, which was real
+    code at 98% coverage; a glob would have silently discarded that signal.
+    """
+    from bioinformatics_prompts.prompt import templates
+
+    for info in pkgutil.iter_modules(templates.__path__):
+        module = importlib.import_module(f"{templates.__name__}.{info.name}")
+        defined = [
+            name
+            for name, value in vars(module).items()
+            if not name.startswith("_") and name.endswith("_prompt")
+        ]
+        assert defined, f"{info.name} defines no *_prompt object; is it really data?"
