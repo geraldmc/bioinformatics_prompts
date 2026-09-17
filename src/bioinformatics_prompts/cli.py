@@ -56,8 +56,8 @@ def chat(ctx):
 def list_templates(ctx):
     """List available prompt templates."""
     interaction = _build_interaction(ctx, require_api_key=False)
-    for template in interaction.list_available_templates():
-        click.echo(f"{template['id']}. {template['research_area']}")
+    for number, template in enumerate(interaction.list_available_templates(), 1):
+        click.echo(f"{number}. {template['research_area']}")
 
 
 @cli.command()

@@ -70,7 +70,7 @@ def test_deep_import_of_prompt_template_stays_light():
     """
     output = _stdout_of(
         "import sys\n"
-        "from bioinformatics_prompts.prompt.templates.prompt_template import BioinformaticsPrompt\n"
+        "from bioinformatics_prompts.prompt_template import BioinformaticsPrompt\n"
         "print('dspy' in sys.modules)\n"
     )
 

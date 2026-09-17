@@ -7,7 +7,7 @@ import logging
 from typing import List, Dict, Union
 from pathlib import Path
 
-from bioinformatics_prompts.prompt.templates.prompt_template import BioinformaticsPrompt
+from bioinformatics_prompts.prompt_template import BioinformaticsPrompt
 
 logger = logging.getLogger(__name__)
 

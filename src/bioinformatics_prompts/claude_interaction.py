@@ -2,7 +2,7 @@ import os
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TypedDict
 
 from bioinformatics_prompts.exceptions import (
     MissingAPIKeyError,
@@ -12,7 +12,7 @@ from bioinformatics_prompts.exceptions import (
     TemplateNotFoundError,
 )
 from bioinformatics_prompts.matching import match_area
-from bioinformatics_prompts.prompt.templates.prompt_template import BioinformaticsPrompt
+from bioinformatics_prompts.prompt_template import BioinformaticsPrompt
 
 # NOTE: dspy is deliberately NOT imported here. It is an optional `routing`
 # extra, and importing this module must not pull it in — see route_template().
@@ -23,6 +23,22 @@ from bioinformatics_prompts.prompt.templates.prompt_template import Bioinformati
 FALLBACK_MODEL = "claude-sonnet-4-6"
 
 logger = logging.getLogger(__name__)
+
+
+class TemplateInfo(TypedDict):
+  """One entry from ClaudeInteraction.list_available_templates().
+
+  A plain dict at runtime — this exists so the per-key types are checkable
+  rather than flattened to Dict[str, str], which this return value was
+  annotated as while carrying an int under "id".
+
+  Pass one to load_template_file() to load exactly that file, rather than
+  passing its research_area to load_template() and having it re-resolved.
+  """
+
+  filename: str
+  research_area: str
+  description: str
 
 
 class ClaudeInteraction:
@@ -61,12 +77,17 @@ class ClaudeInteraction:
     self.conversation_history = []
     self.system_prompt = None
       
-  def list_available_templates(self) -> List[Dict[str, str]]:
+  def list_available_templates(self) -> List[TemplateInfo]:
     """
     List all available prompt templates in the prompt directory,
     sorted alphabetically by filename.
-    
-    Returns: List of dictionaries with template information (filename, research_area)
+
+    Entries describe a template, not its position in this list: adding a
+    template must not change any other entry. Code presenting a numbered menu
+    should number the list itself — see cli_chat.select_template.
+
+    Returns: List of dictionaries with template information
+        (filename, research_area, description)
     """
     templates = []
     
@@ -76,16 +97,15 @@ class ClaudeInteraction:
     # Sort files alphabetically by stem (filename without extension and path)
     json_files.sort(key=lambda path: path.stem.lower())
     
-    for idx, file_path in enumerate(json_files, 1):
+    for file_path in json_files:
       try:
         with open(file_path, 'r') as f:
             data = json.load(f)
-            
+
         # Get "research_area" from the JSON data if available, otherwise use "Unknown"
         research_area = data.get("research_area", "Unknown")
-        
+
         templates.append({
-            "id": idx,
             "filename": str(file_path),
             "research_area": research_area,
             "description": data.get("description", "")
@@ -139,7 +159,7 @@ class ClaudeInteraction:
 
     return self.load_template_file(selected)
 
-  def load_template_file(self, template: Dict[str, str]) -> BioinformaticsPrompt:
+  def load_template_file(self, template: TemplateInfo) -> BioinformaticsPrompt:
     """
     Load one specific template entry, as returned by list_available_templates().
 
@@ -167,7 +187,7 @@ class ClaudeInteraction:
 
     return self.prompt_template
 
-  def route_template(self, user_query: str) -> Optional[Dict[str, str]]:
+  def route_template(self, user_query: str) -> Optional[TemplateInfo]:
     """
     Use a DSPy-based router to pick the best-matching template for a
     user query, without presenting the interactive numbered menu.

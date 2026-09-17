@@ -30,12 +30,13 @@ bioinformatics-prompts/
 │
 ├── src/
 │   └── bioinformatics_prompts/
-│       ├── __init__.py        # Public API: ClaudeInteraction, BioinformaticsPrompt
+│       ├── __init__.py        # Public API (see "Public API" below)
 │       ├── claude_interaction.py  # Claude API integration
 │       ├── cli.py                 # Click CLI entry point (chat/list-templates/route)
 │       ├── cli_chat.py            # Interactive REPL and template picker (CLI only)
 │       ├── exceptions.py          # Exception hierarchy (stdlib-only)
 │       ├── matching.py            # Research-area name matching (no DSPy)
+│       ├── prompt_template.py     # Data model: BioinformaticsPrompt, FewShotExample
 │       ├── dspy_modules/           # DSPy-based automatic template routing ([routing] extra)
 │       │   ├── __init__.py
 │       │   ├── lm.py
@@ -54,7 +55,6 @@ bioinformatics-prompts/
 │       │   │   ├── metagenomics.py
 │       │   │   ├── ngs_sequencing.py
 │       │   │   ├── precision_medicine.py
-│       │   │   ├── prompt_template.py  # Base template class
 │       │   │   ├── sequence_analysis.py
 │       │   │   ├── single_cell.py
 │       │   │   ├── synthetic_biology.py
@@ -149,7 +149,7 @@ Without the extra, every feature except `route_template()` and
 `RoutingUnavailableError` (a subclass of `ImportError`) with an install hint:
 
 ```python
-from bioinformatics_prompts.exceptions import RoutingUnavailableError
+from bioinformatics_prompts import RoutingUnavailableError
 
 try:
     matched = interaction.route_template("How do I call variants?")
@@ -191,6 +191,25 @@ key configured; `chat` and `route` require one.
 
 ## Usage
 
+### Public API
+
+Everything below is importable directly from `bioinformatics_prompts`:
+
+| Name | What it is |
+|---|---|
+| `ClaudeInteraction` | the client: loads templates, generates prompts, talks to Claude |
+| `BioinformaticsPrompt` | a research-area template |
+| `FewShotExample` | one worked example inside a template |
+| `TemplateInfo` | one entry from `list_available_templates()` (a `TypedDict`) |
+| `BioinformaticsPromptsError` | base class for every error this package raises |
+| `MissingAPIKeyError`, `TemplateNotFoundError`, `TemplateLoadError`, `NoTemplateLoadedError`, `RoutingUnavailableError` | the five specific errors — see [Errors](#errors) |
+
+Anything not in that list is an implementation detail and may move without
+notice — including `cli`, `cli_chat`, `matching` and `dspy_modules`. The
+exception is `bioinformatics_prompts.utils.validation`, which is documented
+under [Validating a Prompt Template](#validating-a-prompt-template) and is
+imported from its own module rather than the top level.
+
 ### Basic Usage with Interactive Mode
 
 The interactive conversation is a **CLI feature**, not a library one — the
@@ -220,9 +239,12 @@ interaction = ClaudeInteraction(api_key=api_key)
 interaction.load_template("Genomics")
 
 # Or list what's available first
+# Each entry is a TemplateInfo: filename, research_area, description.
+# Entries describe a template, not its position — number them yourself if
+# you are presenting a menu.
 templates = interaction.list_available_templates()
-for t in templates:
-    print(f"{t['id']}. {t['research_area']}")
+for number, t in enumerate(templates, 1):
+    print(f"{number}. {t['research_area']}")
 
 # Ask a question using the loaded template
 response = interaction.ask_claude("How do I identify SNPs in my bacterial genome?")
@@ -245,6 +267,10 @@ never prompts on stdin. Everything it raises descends from
 | `TemplateLoadError` | a template file was found but could not be read or parsed |
 | `NoTemplateLoadedError` | an operation needing a template ran before one was loaded |
 | `RoutingUnavailableError` | routing requested without the `routing` extra (also an `ImportError`) |
+
+All six are exported from the top level, so
+`from bioinformatics_prompts import TemplateNotFoundError` works; they also
+remain importable from `bioinformatics_prompts.exceptions`.
 
 Errors from the Claude API propagate unchanged as `anthropic.AnthropicError`
 subclasses, so you can catch the SDK's own typed hierarchy — `RateLimitError`,
@@ -290,8 +316,7 @@ this directly (see [CLI usage](#cli-usage) above); it is not yet wired into the
 ### Creating a Custom Template
 
 ```python
-from bioinformatics_prompts import BioinformaticsPrompt
-from bioinformatics_prompts.prompt.templates.prompt_template import FewShotExample
+from bioinformatics_prompts import BioinformaticsPrompt, FewShotExample
 
 # Create a custom prompt template
 custom_prompt = BioinformaticsPrompt(
@@ -335,11 +360,6 @@ HOWTO, it installs **only a `NullHandler`** and configures nothing else — no
 handlers, no formatters, no levels. Importing it will never alter logging
 configuration your application has already set up, and it produces no log
 output until you configure a handler.
-
-(Note that `ClaudeInteraction` does still write progress and error messages to
-stdout with `print()`, independently of logging. Those calls are being removed
-in favour of exceptions and log records — see
-[#14](https://github.com/geraldmc/bioinformatics_prompts/issues/14).)
 
 To see the package's log records, configure logging as you normally would:
 

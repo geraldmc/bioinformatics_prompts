@@ -246,6 +246,51 @@ def test_start_conversation_is_no_longer_on_the_library_class():
 
 
 # ---------------------------------------------------------------------------
+# Template entries describe a template, not its position in a menu
+# ---------------------------------------------------------------------------
+
+
+def test_adding_a_template_does_not_change_the_other_entries(tmp_path, sample_prompt):
+    """The defect: entries carried an "id" that was a positional index over a
+    sorted directory listing, so adding one template renumbered every entry
+    after it — measured at 14 of 14 against the shipped template set. A value
+    that changes when an unrelated file appears identifies nothing, and it was
+    handed to every library caller, not just the menu that wanted it.
+    """
+    for stem in ("genomics", "proteomics"):
+        sample_prompt.research_area = stem.title()
+        (tmp_path / f"{stem}_prompt.json").write_text(sample_prompt.to_json())
+
+    before = ClaudeInteraction(
+        api_key="test-key", prompt_dir=str(tmp_path)
+    ).list_available_templates()
+
+    # A new template that sorts ahead of both existing ones.
+    sample_prompt.research_area = "Assembly"
+    (tmp_path / "aaa_prompt.json").write_text(sample_prompt.to_json())
+
+    after = ClaudeInteraction(
+        api_key="test-key", prompt_dir=str(tmp_path)
+    ).list_available_templates()
+
+    def by_area(entries):
+        return {entry["research_area"]: entry for entry in entries}
+
+    unchanged = by_area(after)
+    for area, entry in by_area(before).items():
+        assert unchanged[area] == entry, f"adding a template mutated the {area!r} entry"
+
+
+def test_template_entries_carry_no_display_ordinal(prompt_dir):
+    """Menu numbering belongs to the menu. The library describes templates."""
+    entry = ClaudeInteraction(
+        api_key="test-key", prompt_dir=str(prompt_dir)
+    ).list_available_templates()[0]
+
+    assert "id" not in entry
+
+
+# ---------------------------------------------------------------------------
 # Regressions found reviewing #20
 # ---------------------------------------------------------------------------
 
@@ -320,8 +365,23 @@ def test_bad_template_pick_does_not_end_the_chat_session(tmp_path, monkeypatch, 
         interaction.load_template_file(broken)
 
     # Drive the REPL: load the good template, then pick the broken one, then quit.
-    good_id = next(t["id"] for t in templates if t["research_area"] == "Test Area")
-    replies = iter([str(good_id), "template", str(broken["id"]), "quit"])
+    # The menu numbers the list it prints, so a template's number is its 1-based
+    # position in what list_available_templates() returned.
+    def menu_number(research_area):
+        return next(
+            number
+            for number, template in enumerate(templates, 1)
+            if template["research_area"] == research_area
+        )
+
+    replies = iter(
+        [
+            str(menu_number("Test Area")),
+            "template",
+            str(menu_number("Broken Area")),
+            "quit",
+        ]
+    )
     monkeypatch.setattr(cli_chat.click, "prompt", lambda *a, **kw: next(replies))
 
     cli_chat.run_chat(interaction)  # must return normally, not raise
@@ -330,12 +390,17 @@ def test_bad_template_pick_does_not_end_the_chat_session(tmp_path, monkeypatch, 
     assert interaction.prompt_template.research_area == "Test Area"
 
 
-def test_menu_rejection_message_lists_real_ids(tmp_path, monkeypatch, sample_prompt, capsys):
-    """Ids are non-contiguous when a file is skipped, so "1 to N" is wrong.
+def test_menu_numbers_are_contiguous_when_a_file_is_unreadable(
+    tmp_path, monkeypatch, sample_prompt, capsys
+):
+    """Every number the menu prints must be selectable.
 
-    list_available_templates() numbers files before discarding unreadable ones,
-    so two surviving templates can carry ids 1 and 3. The old message said
-    "between 1 and 2", rejecting an id the menu had just printed.
+    Supersedes the #20 guard on the rejection message's wording. The library
+    used to number files *before* discarding the unreadable ones, so two
+    surviving templates could be offered as 1 and 3 while the bounds check
+    rejected everything above 2. #20 fixed the message to name the ids that
+    existed; numbering now happens in the menu, over the list it actually
+    prints, so the menu and the bounds check cannot disagree in the first place.
     """
     from bioinformatics_prompts import cli_chat
 
@@ -344,15 +409,18 @@ def test_menu_rejection_message_lists_real_ids(tmp_path, monkeypatch, sample_pro
     (tmp_path / "c_prompt.json").write_text(sample_prompt.to_json())
 
     interaction = ClaudeInteraction(api_key="test-key", prompt_dir=str(tmp_path))
-    ids = [t["id"] for t in interaction.list_available_templates()]
-    assert ids == [1, 3], "fixture needs a gap in the ids"
+    assert len(interaction.list_available_templates()) == 2, "fixture: one file is skipped"
 
-    # Type the id that the old bounds message wrongly rejected, then quit.
-    replies = iter(["2", "q"])
+    # 2 is the last number the menu prints, and the one the old bounds check
+    # would have rejected. It must be accepted. The reply is supplied exactly
+    # once on purpose: a menu that rejects it re-prompts, and an endlessly
+    # repeated answer would spin instead of failing.
+    replies = iter(["2"])
     monkeypatch.setattr(cli_chat.click, "prompt", lambda *a, **kw: next(replies))
 
-    assert cli_chat.select_template(interaction) is None
+    selected = cli_chat.select_template(interaction)
 
+    assert selected is not None, "the menu rejected a number it had just printed"
     output = capsys.readouterr().out
-    assert "between 1 and 2" not in output, "bounds message contradicts the menu"
-    assert "1, 3" in output, "rejection should name the ids that exist"
+    assert "Invalid selection" not in output
+    assert "3." not in output, "menu offered a number beyond the list it printed"

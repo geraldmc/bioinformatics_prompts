@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from bioinformatics_prompts.prompt.templates.prompt_template import BioinformaticsPrompt, FewShotExample
+from bioinformatics_prompts.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a synthetic biology prompt template
 synthetic_biology_prompt = BioinformaticsPrompt(

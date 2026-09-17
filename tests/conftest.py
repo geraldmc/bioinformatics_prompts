@@ -2,7 +2,7 @@
 
 import pytest
 
-from bioinformatics_prompts.prompt.templates.prompt_template import BioinformaticsPrompt, FewShotExample
+from bioinformatics_prompts.prompt_template import BioinformaticsPrompt, FewShotExample
 
 
 @pytest.fixture
