@@ -2,7 +2,7 @@ import os
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TypedDict
 
 from bioinformatics_prompts.exceptions import (
     MissingAPIKeyError,
@@ -23,6 +23,22 @@ from bioinformatics_prompts.prompt.templates.prompt_template import Bioinformati
 FALLBACK_MODEL = "claude-sonnet-4-6"
 
 logger = logging.getLogger(__name__)
+
+
+class TemplateInfo(TypedDict):
+  """One entry from ClaudeInteraction.list_available_templates().
+
+  A plain dict at runtime — this exists so the per-key types are checkable
+  rather than flattened to Dict[str, str], which this return value was
+  annotated as while carrying an int under "id".
+
+  Pass one to load_template_file() to load exactly that file, rather than
+  passing its research_area to load_template() and having it re-resolved.
+  """
+
+  filename: str
+  research_area: str
+  description: str
 
 
 class ClaudeInteraction:
@@ -61,7 +77,7 @@ class ClaudeInteraction:
     self.conversation_history = []
     self.system_prompt = None
       
-  def list_available_templates(self) -> List[Dict[str, str]]:
+  def list_available_templates(self) -> List[TemplateInfo]:
     """
     List all available prompt templates in the prompt directory,
     sorted alphabetically by filename.
@@ -143,7 +159,7 @@ class ClaudeInteraction:
 
     return self.load_template_file(selected)
 
-  def load_template_file(self, template: Dict[str, str]) -> BioinformaticsPrompt:
+  def load_template_file(self, template: TemplateInfo) -> BioinformaticsPrompt:
     """
     Load one specific template entry, as returned by list_available_templates().
 
@@ -171,7 +187,7 @@ class ClaudeInteraction:
 
     return self.prompt_template
 
-  def route_template(self, user_query: str) -> Optional[Dict[str, str]]:
+  def route_template(self, user_query: str) -> Optional[TemplateInfo]:
     """
     Use a DSPy-based router to pick the best-matching template for a
     user query, without presenting the interactive numbered menu.

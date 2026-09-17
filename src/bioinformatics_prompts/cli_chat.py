@@ -9,18 +9,18 @@ Everything here is built on the library's public surface:
 `list_available_templates()`, `load_template()`, `ask_claude()`.
 """
 
-from typing import Dict, Optional
+from typing import Optional
 
 import anthropic
 import click
 
-from bioinformatics_prompts.claude_interaction import ClaudeInteraction
+from bioinformatics_prompts.claude_interaction import ClaudeInteraction, TemplateInfo
 from bioinformatics_prompts.exceptions import BioinformaticsPromptsError
 
 EXIT_COMMANDS = ("quit", "exit", "bye")
 
 
-def select_template(interaction: ClaudeInteraction) -> Optional[Dict[str, str]]:
+def select_template(interaction: ClaudeInteraction) -> Optional[TemplateInfo]:
     """Present the numbered template menu and return the chosen template dict.
 
     Returns the entry from list_available_templates() that the user picked, or
