@@ -33,6 +33,7 @@ bioinformatics-prompts/
 │       ├── __init__.py        # Public API: ClaudeInteraction, BioinformaticsPrompt
 │       ├── claude_interaction.py  # Claude API integration
 │       ├── cli.py                 # Click CLI entry point (chat/list-templates/route)
+│       ├── cli_chat.py            # Interactive REPL and template picker (CLI only)
 │       ├── exceptions.py          # Exception hierarchy (stdlib-only)
 │       ├── matching.py            # Research-area name matching (no DSPy)
 │       ├── dspy_modules/           # DSPy-based automatic template routing ([routing] extra)
@@ -144,7 +145,7 @@ uv add "bioinformatics-prompts[routing] @ git+https://github.com/geraldmc/bioinf
 ```
 
 Without the extra, every feature except `route_template()` and
-`load_prompt_template_by_query()` works normally. Those two raise
+`load_template_by_query()` works normally. Those two raise
 `RoutingUnavailableError` (a subclass of `ImportError`) with an install hint:
 
 ```python
@@ -192,19 +193,14 @@ key configured; `chat` and `route` require one.
 
 ### Basic Usage with Interactive Mode
 
-The simplest way to use this package is through the interactive conversation mode:
+The interactive conversation is a **CLI feature**, not a library one — the
+library never reads stdin or writes to stdout:
 
-```python
-from bioinformatics_prompts import ClaudeInteraction
-
-# Initialize (will use ANTHROPIC_API_KEY from environment variables)
-interaction = ClaudeInteraction()
-
-# Start interactive conversation with template selection
-interaction.start_conversation()
+```bash
+uv run bioinformatics-prompts chat
 ```
 
-This will start a terminal-based conversation where you may:
+This starts a terminal-based conversation where you may:
 - Select a bioinformatics topic template
 - Ask questions within that domain
 - Get contextually-aware responses from Claude
@@ -219,21 +215,40 @@ from bioinformatics_prompts import ClaudeInteraction
 api_key = "your_anthropic_api_key"  # or set as environment variable
 interaction = ClaudeInteraction(api_key=api_key)
 
-# Load a specific template
-interaction.load_prompt_template(interactive=False)  # Will load first available template
+# Load a template by research area, or by filename stem. Matching is exact:
+# a name that doesn't exist raises TemplateNotFoundError listing the valid ones.
+interaction.load_template("Genomics")
 
-# Or list and select from available templates
+# Or list what's available first
 templates = interaction.list_available_templates()
 for t in templates:
     print(f"{t['id']}. {t['research_area']}")
 
 # Ask a question using the loaded template
-response = interaction.ask_claude(
-    "How do I identify SNPs in my bacterial genome?",
-    show_prompt=True  # Show the generated prompt for debugging
-)
+response = interaction.ask_claude("How do I identify SNPs in my bacterial genome?")
 print(response)
+
+# To inspect the prompt that would be sent, ask for it directly
+print(interaction.generate_prompt("How do I identify SNPs?"))
 ```
+
+#### Errors
+
+The library **raises**; it never reports failure through its return value and
+never prompts on stdin. Everything it raises descends from
+`BioinformaticsPromptsError`:
+
+| Exception | Raised when |
+|---|---|
+| `MissingAPIKeyError` | no API key passed or in the environment (also a `ValueError`) |
+| `TemplateNotFoundError` | no template matches the requested name, or the directory is empty |
+| `TemplateLoadError` | a template file was found but could not be read or parsed |
+| `NoTemplateLoadedError` | an operation needing a template ran before one was loaded |
+| `RoutingUnavailableError` | routing requested without the `routing` extra (also an `ImportError`) |
+
+Errors from the Claude API propagate unchanged as `anthropic.AnthropicError`
+subclasses, so you can catch the SDK's own typed hierarchy — `RateLimitError`,
+`AuthenticationError` and the rest — rather than a flattened wrapper.
 
 #### Choosing a model
 
@@ -252,16 +267,15 @@ Requires the optional `routing` extra (see
 [The `routing` extra](#the-routing-extra) above); without it these calls raise
 `RoutingUnavailableError`.
 
-Instead of the interactive numbered menu (`load_prompt_template(interactive=True)`),
-you can route a user's query directly to the best-matching template using a
-small DSPy-based router:
+Instead of naming a template explicitly with `load_template()`, you can route a
+user's query to the best-matching template using a small DSPy-based router:
 
 ```python
 interaction = ClaudeInteraction(api_key=api_key)
 
 # Picks a template automatically based on the query text, or returns None
-# if no good match is found (fall back to load_prompt_template() in that case).
-loaded = interaction.load_prompt_template_by_query(
+# if no good match is found (fall back to load_template(name) in that case).
+loaded = interaction.load_template_by_query(
     "How do I call variants from bacterial WGS reads?"
 )
 ```
@@ -270,8 +284,8 @@ This uses `dspy.LM("anthropic/<model>", ...)` under the hood (see
 `dspy_modules/lm.py` and `dspy_modules/router.py`), resolving the model the
 same way as `send_to_claude` (`self.default_model` if set, else
 `FALLBACK_MODEL`). The `bioinformatics-prompts route` subcommand exercises
-this directly (see [CLI usage](#cli-usage) above); it is not yet wired into
-`start_conversation()`'s interactive loop, which still uses the numbered menu.
+this directly (see [CLI usage](#cli-usage) above); it is not yet wired into the
+`chat` subcommand's interactive loop, which still uses the numbered menu.
 
 ### Creating a Custom Template
 

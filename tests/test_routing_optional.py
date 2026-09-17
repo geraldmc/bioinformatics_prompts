@@ -150,11 +150,11 @@ def test_routing_unavailable_is_an_import_error():
     assert issubclass(RoutingUnavailableError, ImportError)
 
 
-def test_load_prompt_template_by_query_propagates_the_error(prompt_dir, dspy_unavailable):
+def test_load_template_by_query_propagates_the_error(prompt_dir, dspy_unavailable):
     """The convenience wrapper must not swallow it into its None return."""
     from bioinformatics_prompts import ClaudeInteraction
 
     interaction = ClaudeInteraction(api_key="test-key", prompt_dir=str(prompt_dir))
 
     with pytest.raises(RoutingUnavailableError):
-        interaction.load_prompt_template_by_query("How do I assemble a genome?")
+        interaction.load_template_by_query("How do I assemble a genome?")

@@ -1,8 +1,13 @@
+import anthropic
 import click
 from dotenv import load_dotenv
 
+from bioinformatics_prompts import cli_chat
 from bioinformatics_prompts.claude_interaction import ClaudeInteraction
-from bioinformatics_prompts.exceptions import RoutingUnavailableError
+from bioinformatics_prompts.exceptions import (
+    BioinformaticsPromptsError,
+    RoutingUnavailableError,
+)
 
 
 def _build_interaction(ctx, *, require_api_key=True):
@@ -14,6 +19,7 @@ def _build_interaction(ctx, *, require_api_key=True):
             require_api_key=require_api_key,
         )
     except ValueError as e:
+        # MissingAPIKeyError co-inherits ValueError, so this keeps catching it.
         raise click.ClickException(
             f"{e} Set ANTHROPIC_API_KEY or CLAUDE_API_KEY, or pass --api-key."
         ) from e
@@ -36,7 +42,13 @@ def cli(ctx, api_key, model, prompt_dir):
 @click.pass_context
 def chat(ctx):
     """Start an interactive conversation with Claude."""
-    _build_interaction(ctx).start_conversation()
+    interaction = _build_interaction(ctx)
+    try:
+        cli_chat.run_chat(interaction)
+    except (BioinformaticsPromptsError, anthropic.AnthropicError) as e:
+        # The library raises; the CLI is where that becomes a readable message
+        # instead of a traceback.
+        raise click.ClickException(str(e)) from e
 
 
 @cli.command(name="list-templates")
@@ -59,6 +71,8 @@ def route(ctx, query):
     except RoutingUnavailableError as e:
         # A missing extra is a setup problem, not a crash: show the install
         # hint rather than a traceback.
+        raise click.ClickException(str(e)) from e
+    except (BioinformaticsPromptsError, anthropic.AnthropicError) as e:
         raise click.ClickException(str(e)) from e
     if matched:
         click.echo(f"Matched template: {matched['research_area']}")
