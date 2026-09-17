@@ -219,3 +219,56 @@ def test_library_modules_have_no_interactive_io():
 
 def test_start_conversation_is_no_longer_on_the_library_class():
     assert not hasattr(ClaudeInteraction, "start_conversation")
+
+
+# ---------------------------------------------------------------------------
+# Regressions found reviewing #20
+# ---------------------------------------------------------------------------
+
+
+def test_picker_loads_the_exact_file_selected(tmp_path, monkeypatch, sample_prompt):
+    """Two templates can share a research_area, so selecting by name is lossy.
+
+    The picker used to return a research_area that load_template() then
+    re-resolved by scanning from the top, silently loading the first match
+    instead of the entry the user chose.
+
+    This drives the real picker with a simulated keystroke. Asserting against
+    load_template_file() directly would pass even with the bug present, since
+    the defect lives in how the picker hands its choice on.
+    """
+    from bioinformatics_prompts import cli_chat
+
+    for stem, marker in (("aardvark_prompt", "FIRST"), ("zebra_prompt", "SECOND")):
+        sample_prompt.key_concepts = [marker, "B", "C"]
+        (tmp_path / f"{stem}.json").write_text(sample_prompt.to_json())
+
+    interaction = ClaudeInteraction(api_key="test-key", prompt_dir=str(tmp_path))
+    templates = interaction.list_available_templates()
+    assert len({t["research_area"] for t in templates}) == 1, "fixture needs a shared name"
+
+    # The user types "2" — the second entry, zebra.
+    monkeypatch.setattr(cli_chat.click, "prompt", lambda *a, **kw: "2")
+
+    assert cli_chat._load_selected_template(interaction) is True
+
+    assert interaction.prompt_template.key_concepts[0] == "SECOND", (
+        "picker loaded a different file than the one selected"
+    )
+
+
+def test_route_miss_is_reported_not_silent(tmp_path, monkeypatch, sample_prompt):
+    """A routing miss must be visible: exit 0 with no output reads as success."""
+    from click.testing import CliRunner
+
+    import bioinformatics_prompts.cli as cli_module
+    from bioinformatics_prompts.cli import cli
+
+    monkeypatch.setattr(cli_module, "load_dotenv", lambda: None)
+    monkeypatch.setattr(ClaudeInteraction, "route_template", lambda self, query: None)
+
+    result = CliRunner().invoke(cli, ["--api-key", "test-key", "route", "unroutable"])
+
+    assert result.exit_code == 0
+    assert result.output.strip(), "a miss produced no output at all"
+    assert "No matching template" in result.output

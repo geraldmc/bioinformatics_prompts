@@ -137,10 +137,25 @@ class ClaudeInteraction:
             f"No template named {name!r}. Available research areas: {available}"
         )
 
-    return self._load_template_file(selected)
+    return self.load_template_file(selected)
 
-  def _load_template_file(self, template: Dict[str, str]) -> BioinformaticsPrompt:
-    """Read and parse one template dict from list_available_templates()."""
+  def load_template_file(self, template: Dict[str, str]) -> BioinformaticsPrompt:
+    """
+    Load one specific template entry, as returned by list_available_templates().
+
+    Use this when you already hold the entry — a menu selection, say — rather
+    than a name. load_template(name) has to resolve the name by scanning, and
+    that scan stops at the first match, so passing a name round-trip can pick a
+    different file when two templates share a research_area.
+
+    Args:
+        template: An entry from list_available_templates().
+
+    Returns: The loaded BioinformaticsPrompt, also stored on self.prompt_template.
+
+    Raises:
+        TemplateLoadError: if the file could not be read or parsed.
+    """
     try:
       with open(template["filename"], "r") as f:
           self.prompt_template = BioinformaticsPrompt.from_json(f.read())
@@ -212,7 +227,7 @@ class ClaudeInteraction:
     if not matched:
         return None
 
-    return self._load_template_file(matched)
+    return self.load_template_file(matched)
 
   def generate_prompt(self, user_query: str) -> str:
     """

@@ -9,7 +9,7 @@ Everything here is built on the library's public surface:
 `list_available_templates()`, `load_template()`, `ask_claude()`.
 """
 
-from typing import Optional
+from typing import Dict, Optional
 
 import anthropic
 import click
@@ -20,11 +20,18 @@ from bioinformatics_prompts.exceptions import BioinformaticsPromptsError
 EXIT_COMMANDS = ("quit", "exit", "bye")
 
 
-def select_template(interaction: ClaudeInteraction) -> Optional[str]:
-    """Present the numbered template menu and return the chosen research area.
+def select_template(interaction: ClaudeInteraction) -> Optional[Dict[str, str]]:
+    """Present the numbered template menu and return the chosen template dict.
 
-    Returns None if the user quits. Raises TemplateNotFoundError if the prompt
-    directory holds no templates — a configuration problem, not a choice.
+    Returns the entry from list_available_templates() that the user picked, or
+    None if they quit.
+
+    It returns the whole dict rather than just the research area on purpose. A
+    name has to be re-resolved by scanning the list, and that scan stops at the
+    first match — so when two templates share a research_area (or one file's
+    area equals another's stem, or several unreadable files both fall back to
+    "Unknown"), the user's actual choice would be silently swapped for whichever
+    came first.
     """
     templates = interaction.list_available_templates()
 
@@ -55,17 +62,18 @@ def select_template(interaction: ClaudeInteraction) -> Optional[str]:
             )
             continue
 
-        return selected["research_area"]
+        return selected
 
 
 def _load_selected_template(interaction: ClaudeInteraction) -> bool:
     """Run the picker and load the choice. Returns False if the user quit."""
-    research_area = select_template(interaction)
-    if research_area is None:
+    selected = select_template(interaction)
+    if selected is None:
         return False
 
-    interaction.load_template(research_area)
-    click.echo(f"Loaded template: {research_area}")
+    # Load the file the user actually picked, not a re-resolution of its name.
+    interaction.load_template_file(selected)
+    click.echo(f"Loaded template: {selected['research_area']}")
     return True
 
 

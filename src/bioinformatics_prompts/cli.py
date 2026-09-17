@@ -76,3 +76,8 @@ def route(ctx, query):
         raise click.ClickException(str(e)) from e
     if matched:
         click.echo(f"Matched template: {matched['research_area']}")
+    else:
+        # route_template returns None for a genuine miss. It no longer prints
+        # that itself — a library shouldn't — so the CLI has to say it, or a
+        # miss is silent and indistinguishable from success.
+        click.echo(f"No matching template found for query: {query}")
