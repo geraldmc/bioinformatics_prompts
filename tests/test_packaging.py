@@ -8,6 +8,7 @@ coverage configuration that keeps the report honest.
 import subprocess
 import sys
 from importlib.metadata import version
+from pathlib import Path
 
 
 def _in_fresh_interpreter(code: str) -> str:
@@ -112,11 +113,14 @@ def test_coverage_omits_template_data_by_pattern_not_by_name():
     invariant is guarded by
     test_public_api.py::test_template_package_holds_only_template_data.
     """
-    import tomllib
-    from pathlib import Path
+    # Read through coverage's own config parser rather than tomllib, which is
+    # stdlib only from 3.11 while this package supports 3.10. coverage is
+    # already a test dependency and is the component that consumes this
+    # setting, so this asserts what actually takes effect.
+    import coverage
 
     pyproject = Path(__file__).resolve().parent.parent / "pyproject.toml"
-    omit = tomllib.loads(pyproject.read_text())["tool"]["coverage"]["run"]["omit"]
+    omit = coverage.Coverage(config_file=str(pyproject)).config.run_omit
 
     named_modules = [
         entry
