@@ -98,3 +98,87 @@ def test_template_package_holds_only_template_data():
             if not name.startswith("_") and name.endswith("_prompt")
         ]
         assert defined, f"{info.name} defines no *_prompt object; is it really data?"
+
+
+# ---------------------------------------------------------------------------
+# What the package exports
+# ---------------------------------------------------------------------------
+
+EXPECTED_EXPORTS = [
+    "BioinformaticsPrompt",
+    "BioinformaticsPromptsError",
+    "ClaudeInteraction",
+    "FewShotExample",
+    "MissingAPIKeyError",
+    "NoTemplateLoadedError",
+    "RoutingUnavailableError",
+    "TemplateInfo",
+    "TemplateLoadError",
+    "TemplateNotFoundError",
+]
+
+
+def test_all_is_exactly_the_declared_surface():
+    """Pinned deliberately: adding a name here is an API decision, not a detail.
+
+    FewShotExample is the load-bearing one. It is the element type of
+    BioinformaticsPrompt's `examples` argument, so before this the exported
+    class could not be constructed from the exported names alone.
+    """
+    import bioinformatics_prompts
+
+    assert bioinformatics_prompts.__all__ == EXPECTED_EXPORTS
+
+
+def test_every_exported_name_resolves():
+    import bioinformatics_prompts
+
+    missing = [
+        name for name in bioinformatics_prompts.__all__
+        if not hasattr(bioinformatics_prompts, name)
+    ]
+    assert missing == []
+
+
+def test_star_import_binds_every_exported_name():
+    namespace = {}
+    exec("from bioinformatics_prompts import *", namespace)
+
+    bound = {name for name in namespace if not name.startswith("__")}
+    assert bound == set(EXPECTED_EXPORTS)
+
+
+def test_terminal_ui_and_routing_internals_are_not_exported():
+    """cli_chat owns the REPL #14 moved out of the library; match_area is
+    routing internals that #11 split out only so it stayed importable without
+    the extra. Neither is part of the surface a consumer programs against.
+    """
+    import bioinformatics_prompts
+
+    for name in ("run_chat", "select_template", "match_area", "cli", "cli_chat"):
+        assert name not in bioinformatics_prompts.__all__
+
+
+def test_stdlib_logging_is_not_a_package_attribute():
+    """__init__ imports logging for its NullHandler, which used to leave
+    `bioinformatics_prompts.logging` resolving to the stdlib module — next to
+    the real API in dir(), and a live trap because this package had a real
+    utils/logging.py until #12 removed it.
+    """
+    import bioinformatics_prompts
+
+    assert not hasattr(bioinformatics_prompts, "logging")
+
+
+def test_exceptions_are_importable_without_the_routing_extra():
+    """RoutingUnavailableError is exported from the top level even though it is
+    about an optional extra: exceptions.py is stdlib-only by design (#14), so
+    exporting it reaches no further than the rest of the package already does.
+    """
+    import bioinformatics_prompts
+
+    assert issubclass(bioinformatics_prompts.RoutingUnavailableError, ImportError)
+    assert issubclass(
+        bioinformatics_prompts.RoutingUnavailableError,
+        bioinformatics_prompts.BioinformaticsPromptsError,
+    )
