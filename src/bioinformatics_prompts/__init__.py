@@ -48,3 +48,25 @@ __all__ = [
     "TemplateLoadError",
     "TemplateNotFoundError",
 ]
+
+
+def __getattr__(name: str) -> str:
+    """Resolve `__version__` lazily, per PEP 562.
+
+    Reading it from installed metadata keeps pyproject.toml the single source
+    of truth, but `importlib.metadata` is expensive: importing it costs ~63
+    modules and roughly doubles this package's import time (measured 102 -> 165
+    modules, 9.1ms -> 16.7ms on a core-only install). #11 cut the import graph
+    from 1906 modules to ~104 and #21 held it there, so that is not a cost to
+    pay on every import for an attribute almost nothing reads. Deferring it
+    here means only a caller that actually asks pays.
+    """
+    if name == "__version__":
+        from importlib.metadata import PackageNotFoundError, version
+
+        try:
+            return version("bioinformatics-prompts")
+        except PackageNotFoundError:      # running from an uninstalled source tree
+            return "0.0.0.dev0"
+
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

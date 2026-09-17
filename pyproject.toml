@@ -4,6 +4,24 @@ version = "0.1.0"
 description = "Generate and use bioinformatics-specific prompts with Anthropic's Claude AI"
 readme = "README.md"
 requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "geraldmc" }]
+# No "License :: OSI Approved :: MIT License" classifier: per the packaging
+# guide, classifier-based license declarations serve only PyPI search and are
+# superseded by the PEP 639 `license` field above. Carrying both invites
+# tooling conflicts.
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
 dependencies = [
     "anthropic>=0.49.0",
     "python-dotenv>=1.1.0",
@@ -15,6 +33,11 @@ dependencies = [
 # which no consumer of this Claude-focused library should pay for unless they
 # actually route.
 routing = ["dspy>=3.3.0"]
+
+[project.urls]
+Homepage = "https://github.com/geraldmc/bioinformatics_prompts"
+Repository = "https://github.com/geraldmc/bioinformatics_prompts"
+Issues = "https://github.com/geraldmc/bioinformatics_prompts/issues"
 
 [project.scripts]
 bioinformatics-prompts = "bioinformatics_prompts.cli:cli"
@@ -28,6 +51,9 @@ bioinformatics-prompts = "bioinformatics_prompts.cli:cli"
 test = [
     "pytest>=8.0",
     "pytest-cov>=6.0",
+    # For tests/test_typing_contract.py. In `test` rather than `dev` so the
+    # contract is checked wherever pytest runs, including the core-only job.
+    "mypy>=1.18",
 ]
 dev = [
     { include-group = "test" },
@@ -49,20 +75,11 @@ addopts = ["-ra"]
 branch = true
 source = ["src/bioinformatics_prompts"]
 omit = [
-    "src/bioinformatics_prompts/prompt/templates/ai.py",
-    "src/bioinformatics_prompts/prompt/templates/bioinformatics_tools.py",
-    "src/bioinformatics_prompts/prompt/templates/blockchain_bioinformatics.py",
-    "src/bioinformatics_prompts/prompt/templates/data_standardization.py",
-    "src/bioinformatics_prompts/prompt/templates/epigenomics.py",
-    "src/bioinformatics_prompts/prompt/templates/genomics.py",
-    "src/bioinformatics_prompts/prompt/templates/gwas.py",
-    "src/bioinformatics_prompts/prompt/templates/metagenomics.py",
-    "src/bioinformatics_prompts/prompt/templates/ngs_sequencing.py",
-    "src/bioinformatics_prompts/prompt/templates/precision_medicine.py",
-    "src/bioinformatics_prompts/prompt/templates/sequence_analysis.py",
-    "src/bioinformatics_prompts/prompt/templates/single_cell.py",
-    "src/bioinformatics_prompts/prompt/templates/synthetic_biology.py",
-    "src/bioinformatics_prompts/prompt/templates/workflow_automation.py",
+    # The 14 template data modules, by pattern rather than by name: the
+    # hand-maintained list silently went stale whenever a template was added.
+    # Safe because this directory holds only template content -- the data model
+    # moved out in #21, and test_public_api.py guards that it stays that way.
+    "*/prompt/templates/*.py",
     "*/tests/*",
     "*/.venv/*",
 ]
