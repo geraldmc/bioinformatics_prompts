@@ -143,14 +143,38 @@ def test_load_template_error_lists_the_valid_names(prompt_dir):
         interaction.load_template("nonexistent")
 
 
-def test_load_template_raises_on_corrupt_file(tmp_path):
-    """A findable-but-unparseable template is a load failure, not 'not found'."""
+def test_load_template_on_unparseable_json_reports_not_found(tmp_path):
+    """A file that isn't valid JSON never reaches the load path at all.
+
+    list_available_templates() filters JSONDecodeError while listing, so the
+    file is invisible and the name genuinely does not exist. Asserting
+    TemplateNotFoundError specifically: an earlier version of this test allowed
+    either that or TemplateLoadError, which made it pass no matter which path
+    ran — including if the load-error wrapping were deleted entirely.
+    """
     (tmp_path / "broken_prompt.json").write_text("{not valid json")
 
     interaction = ClaudeInteraction(api_key="test-key", prompt_dir=str(tmp_path))
 
-    with pytest.raises((TemplateLoadError, TemplateNotFoundError)):
+    assert interaction.list_available_templates() == []
+    with pytest.raises(TemplateNotFoundError):
         interaction.load_template("broken_prompt")
+
+
+def test_load_template_raises_load_error_on_schema_failure(tmp_path):
+    """Valid JSON that isn't a valid template *does* reach the load path.
+
+    This is the case that actually exercises TemplateLoadError: the file parses,
+    so it survives the listing filter, and fails when BioinformaticsPrompt tries
+    to build from it.
+    """
+    (tmp_path / "broken_prompt.json").write_text('{"research_area": "Broken Area"}')
+
+    interaction = ClaudeInteraction(api_key="test-key", prompt_dir=str(tmp_path))
+
+    assert len(interaction.list_available_templates()) == 1
+    with pytest.raises(TemplateLoadError):
+        interaction.load_template("Broken Area")
 
 
 def test_old_load_prompt_template_is_gone(prompt_dir):
@@ -304,3 +328,31 @@ def test_bad_template_pick_does_not_end_the_chat_session(tmp_path, monkeypatch, 
 
     # The good template is still loaded and history survived the bad pick.
     assert interaction.prompt_template.research_area == "Test Area"
+
+
+def test_menu_rejection_message_lists_real_ids(tmp_path, monkeypatch, sample_prompt, capsys):
+    """Ids are non-contiguous when a file is skipped, so "1 to N" is wrong.
+
+    list_available_templates() numbers files before discarding unreadable ones,
+    so two surviving templates can carry ids 1 and 3. The old message said
+    "between 1 and 2", rejecting an id the menu had just printed.
+    """
+    from bioinformatics_prompts import cli_chat
+
+    (tmp_path / "a_prompt.json").write_text(sample_prompt.to_json())
+    (tmp_path / "b_prompt.json").write_text("{not valid json")
+    (tmp_path / "c_prompt.json").write_text(sample_prompt.to_json())
+
+    interaction = ClaudeInteraction(api_key="test-key", prompt_dir=str(tmp_path))
+    ids = [t["id"] for t in interaction.list_available_templates()]
+    assert ids == [1, 3], "fixture needs a gap in the ids"
+
+    # Type the id that the old bounds message wrongly rejected, then quit.
+    replies = iter(["2", "q"])
+    monkeypatch.setattr(cli_chat.click, "prompt", lambda *a, **kw: next(replies))
+
+    assert cli_chat.select_template(interaction) is None
+
+    output = capsys.readouterr().out
+    assert "between 1 and 2" not in output, "bounds message contradicts the menu"
+    assert "1, 3" in output, "rejection should name the ids that exist"

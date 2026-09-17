@@ -57,9 +57,13 @@ def select_template(interaction: ClaudeInteraction) -> Optional[Dict[str, str]]:
 
         selected = next((t for t in templates if t["id"] == choice_idx), None)
         if selected is None:
-            click.echo(
-                f"Invalid selection. Please choose a number between 1 and {len(templates)}"
-            )
+            # Phrased from the ids that actually exist, not from the count.
+            # list_available_templates() numbers files before discarding the
+            # unreadable ones, so the ids can be non-contiguous: two templates
+            # may be numbered 1 and 3, and "between 1 and 2" would then reject
+            # a number the menu just offered.
+            valid = ", ".join(str(t["id"]) for t in templates)
+            click.echo(f"Invalid selection. Please choose one of: {valid}")
             continue
 
         return selected
