@@ -37,6 +37,7 @@ bioinformatics-prompts/
 │       ├── exceptions.py          # Exception hierarchy (stdlib-only)
 │       ├── matching.py            # Research-area name matching (no DSPy)
 │       ├── prompt_template.py     # Data model: BioinformaticsPrompt, FewShotExample
+│       ├── py.typed               # PEP 561 marker: annotations are usable downstream
 │       ├── dspy_modules/           # DSPy-based automatic template routing ([routing] extra)
 │       │   ├── __init__.py
 │       │   ├── lm.py
@@ -209,6 +210,17 @@ notice — including `cli`, `cli_chat`, `matching` and `dspy_modules`. The
 exception is `bioinformatics_prompts.utils.validation`, which is documented
 under [Validating a Prompt Template](#validating-a-prompt-template) and is
 imported from its own module rather than the top level.
+
+`bioinformatics_prompts.__version__` reports the installed version, read from
+package metadata so `pyproject.toml` stays the single source of truth. It is
+resolved on first access rather than at import time — `importlib.metadata`
+costs more to import than the rest of this package combined, and an attribute
+most callers never read should not be charged to every import.
+
+The package ships a **`py.typed`** marker, so mypy and pyright use its
+annotations instead of treating it as untyped. `tests/test_typing_contract.py`
+type-checks a consumer written from this README on every CI run, so what is
+documented here is what a type checker will accept.
 
 ### Basic Usage with Interactive Mode
 

@@ -4,7 +4,7 @@ import re
 import os
 import json
 import logging
-from typing import List, Dict, Union
+from typing import List, Dict, TypedDict
 from pathlib import Path
 
 from bioinformatics_prompts.prompt_template import BioinformaticsPrompt
@@ -12,14 +12,28 @@ from bioinformatics_prompts.prompt_template import BioinformaticsPrompt
 logger = logging.getLogger(__name__)
 
 
-def validate_prompt(prompt: BioinformaticsPrompt) -> Dict[str, Union[bool, List[str]]]:
+class ValidationResult(TypedDict):
+    """What validate_prompt() returns.
+
+    A plain dict at runtime. Declared as a TypedDict because the previous
+    Dict[str, Union[bool, List[str]]] forced every caller to narrow before
+    using a value — `result["warnings"]` was not iterable as far as a type
+    checker was concerned.
+    """
+
+    valid: bool
+    warnings: List[str]
+    errors: List[str]
+
+
+def validate_prompt(prompt: BioinformaticsPrompt) -> ValidationResult:
     """
     Validate a bioinformatics prompt for common issues.
     
     Args: prompt: BioinformaticsPrompt to validate
     Returns: Dictionary with validation results
     """
-    results = {
+    results: ValidationResult = {
         "valid": True,
         "warnings": [],
         "errors": []

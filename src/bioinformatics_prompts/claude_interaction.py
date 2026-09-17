@@ -313,7 +313,7 @@ class ClaudeInteraction:
 
     return FALLBACK_MODEL
 
-  def send_to_claude(self, prompt: str, model: str = None, max_tokens: int = 4000,
+  def send_to_claude(self, prompt: str, model: Optional[str] = None, max_tokens: int = 4000,
                     use_history: bool = False) -> str:
     """
     Send a prompt to Claude API and get the response.
@@ -369,7 +369,7 @@ class ClaudeInteraction:
 
     return response.content[0].text
 
-  def ask_claude(self, user_query: str, model: str = None, max_tokens: int = 4000,
+  def ask_claude(self, user_query: str, model: Optional[str] = None, max_tokens: int = 4000,
                 use_history: bool = True, use_template: bool = True) -> str:
     """
     Process a user query and get a response from Claude.

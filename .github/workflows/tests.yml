@@ -169,6 +169,15 @@ jobs:
             echo "::error::expected 14 template JSON files in the wheel, found $json_count"
             exit 1
           fi
+          # py.typed is a marker file, not code: nothing in the test suite can
+          # tell whether it actually shipped. A build-config change that
+          # dropped it would silently turn the package untyped for every
+          # downstream checker, with no other symptom.
+          if ! unzip -l "${wheels[0]}" | grep -q 'bioinformatics_prompts/py.typed'; then
+            echo "::error::py.typed is missing from the wheel; the package ships as untyped"
+            exit 1
+          fi
+          echo "py.typed present in wheel"
           echo "wheel=${wheels[0]}" >> "$GITHUB_OUTPUT"
 
       - name: Check the installed wheel can load its templates
