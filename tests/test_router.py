@@ -152,7 +152,7 @@ def test_route_template_no_match_returns_none(prompt_dir, monkeypatch):
     assert matched is None
 
 
-def test_load_prompt_template_by_query_loads_matched_template(prompt_dir, monkeypatch):
+def test_load_template_by_query_loads_matched_template(prompt_dir, monkeypatch):
     dummy_lm = DummyLM([{"research_area": "Single-Cell Genomics"}])
     monkeypatch.setattr(
         "bioinformatics_prompts.dspy_modules.lm.configure_claude_lm",
@@ -161,14 +161,14 @@ def test_load_prompt_template_by_query_loads_matched_template(prompt_dir, monkey
 
     interaction = ClaudeInteraction(api_key="test-key", prompt_dir=str(prompt_dir))
 
-    loaded = interaction.load_prompt_template_by_query("How do I cluster my cells?")
+    loaded = interaction.load_template_by_query("How do I cluster my cells?")
 
     assert loaded is not None
     assert loaded.research_area == "Single-Cell Genomics"
     assert interaction.prompt_template is loaded
 
 
-def test_load_prompt_template_by_query_no_match_returns_none(prompt_dir, monkeypatch):
+def test_load_template_by_query_no_match_returns_none(prompt_dir, monkeypatch):
     dummy_lm = DummyLM([{"research_area": "Astrophysics"}])
     monkeypatch.setattr(
         "bioinformatics_prompts.dspy_modules.lm.configure_claude_lm",
@@ -177,6 +177,6 @@ def test_load_prompt_template_by_query_no_match_returns_none(prompt_dir, monkeyp
 
     interaction = ClaudeInteraction(api_key="test-key", prompt_dir=str(prompt_dir))
 
-    loaded = interaction.load_prompt_template_by_query("How do I cluster my cells?")
+    loaded = interaction.load_template_by_query("How do I cluster my cells?")
 
     assert loaded is None

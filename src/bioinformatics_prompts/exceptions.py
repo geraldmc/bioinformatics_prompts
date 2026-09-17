@@ -10,6 +10,32 @@ class BioinformaticsPromptsError(Exception):
     """Base class for every exception this package raises."""
 
 
+class MissingAPIKeyError(BioinformaticsPromptsError, ValueError):
+    """No Claude API key was passed or found in the environment.
+
+    Also subclasses ValueError because that is what this condition raised
+    before the exception hierarchy existed, and callers (including cli.py)
+    catch it that way.
+    """
+
+
+class TemplateNotFoundError(BioinformaticsPromptsError):
+    """No template matched the requested name, or the prompt directory is empty."""
+
+
+class TemplateLoadError(BioinformaticsPromptsError):
+    """A template file was located but could not be read or parsed."""
+
+
+class NoTemplateLoadedError(BioinformaticsPromptsError):
+    """An operation requiring a loaded template ran before one was loaded.
+
+    Unlike MissingAPIKeyError this does *not* subclass ValueError: the
+    ValueError it replaces was caught by nothing, so there is no contract to
+    preserve.
+    """
+
+
 class RoutingUnavailableError(BioinformaticsPromptsError, ImportError):
     """Template routing was requested but the `routing` extra is not installed.
 

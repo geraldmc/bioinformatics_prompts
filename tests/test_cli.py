@@ -32,7 +32,7 @@ def no_real_dotenv(monkeypatch):
 
 def test_bare_invocation_falls_through_to_chat(runner, monkeypatch):
     calls = []
-    monkeypatch.setattr(ClaudeInteraction, "start_conversation", lambda self: calls.append("chat"))
+    monkeypatch.setattr(cli_module.cli_chat, "run_chat", lambda interaction: calls.append("chat"))
 
     result = runner.invoke(cli, ["--api-key", "test-key"])
 
@@ -42,7 +42,7 @@ def test_bare_invocation_falls_through_to_chat(runner, monkeypatch):
 
 def test_explicit_chat_subcommand(runner, monkeypatch):
     calls = []
-    monkeypatch.setattr(ClaudeInteraction, "start_conversation", lambda self: calls.append("chat"))
+    monkeypatch.setattr(cli_module.cli_chat, "run_chat", lambda interaction: calls.append("chat"))
 
     result = runner.invoke(cli, ["--api-key", "test-key", "chat"])
 
@@ -181,7 +181,7 @@ def test_global_options_passthrough(runner, prompt_dir):
 def test_load_dotenv_called_during_group_dispatch(runner, monkeypatch):
     calls = []
     monkeypatch.setattr(cli_module, "load_dotenv", lambda: calls.append("load_dotenv"))
-    monkeypatch.setattr(ClaudeInteraction, "start_conversation", lambda self: None)
+    monkeypatch.setattr(cli_module.cli_chat, "run_chat", lambda interaction: None)
 
     runner.invoke(cli, ["--api-key", "test-key", "chat"])
 

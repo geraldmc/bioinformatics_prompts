@@ -1,9 +1,16 @@
 import os
 import json
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from bioinformatics_prompts.exceptions import RoutingUnavailableError
+from bioinformatics_prompts.exceptions import (
+    MissingAPIKeyError,
+    NoTemplateLoadedError,
+    RoutingUnavailableError,
+    TemplateLoadError,
+    TemplateNotFoundError,
+)
 from bioinformatics_prompts.matching import match_area
 from bioinformatics_prompts.prompt.templates.prompt_template import BioinformaticsPrompt
 
@@ -14,6 +21,8 @@ from bioinformatics_prompts.prompt.templates.prompt_template import Bioinformati
 # and querying the Models API for a current one fails (see
 # ClaudeInteraction._resolve_default_model).
 FALLBACK_MODEL = "claude-sonnet-4-6"
+
+logger = logging.getLogger(__name__)
 
 
 class ClaudeInteraction:
@@ -40,7 +49,9 @@ class ClaudeInteraction:
     """
     self.api_key = api_key or os.environ.get("CLAUDE_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
     if require_api_key and not self.api_key:
-        raise ValueError("Claude API key not provided or found in environment variables")
+        raise MissingAPIKeyError(
+            "Claude API key not provided or found in environment variables"
+        )
 
     self.prompt_dir = prompt_dir or str(Path(__file__).resolve().parent / "prompt")
     self.prompt_template = None
@@ -80,62 +91,81 @@ class ClaudeInteraction:
             "description": data.get("description", "")
         })
       except (json.JSONDecodeError, FileNotFoundError) as e:
-        print(f"Error reading {file_path}: {str(e)}")
+        logger.warning("Skipping unreadable template %s: %s", file_path, e)
     
     return templates
   
-  def load_prompt_template(self, interactive: bool = True) -> Optional[BioinformaticsPrompt]:
+  def load_template(self, name: str) -> BioinformaticsPrompt:
     """
-    Load a prompt template interactively or by filename.
+    Load a prompt template by name.
+
     Args:
-        interactive: If True, present list of templates for user to select.
-                    If False, use the default template or raise error if none available.
-    
-    Returns: Selected BioinformaticsPrompt if successful, None otherwise
+        name: The template's research_area (e.g. "Genomics") or its filename
+            stem (e.g. "genomics_prompt"). Matching is exact and
+            case-insensitive.
+
+    Returns: The loaded BioinformaticsPrompt, also stored on self.prompt_template.
+
+    Raises:
+        TemplateNotFoundError: if no template has that research_area or stem.
+            Matching is deliberately exact rather than reusing match_area()'s
+            substring fallback: that is right for routing, where the input is
+            fuzzy model output, but an explicit call should be deterministic —
+            substring matching would let adding a template silently change what
+            an existing call returns.
+        TemplateLoadError: if the file was found but could not be read or parsed.
     """
     templates = self.list_available_templates()
-    
+
     if not templates:
-        print(f"No prompt templates found in {self.prompt_dir}")
-        return None
-    
-    selected_template = None
-    
-    if interactive:
-      # Display available templates
-      print("\nAvailable research areas (prompt templates):")
-      for template in templates:
-          print(f"{template['id']}. {template['research_area']}")
-      
-      # Get user choice
-      while selected_template is None:
-        try:
-          choice = input("\nSelect a template by number (or 'q' to quit): ")
-          
-          if choice.lower() == 'q':
-              return None
-          
-          choice_idx = int(choice)
-          selected_template = next((t for t in templates if t["id"] == choice_idx), None)
-          
-          if not selected_template:
-              print(f"Invalid selection. Please choose a number between 1 and {len(templates)}")
-        except ValueError:
-          print("Please enter a valid number")
-    else:
-      # Default to first template
-      selected_template = templates[0]
-      print(f"Using default template: {selected_template['research_area']}")
-    
-    # Load the selected template
+        raise TemplateNotFoundError(f"No prompt templates found in {self.prompt_dir}")
+
+    wanted = name.strip().lower()
+    selected = next(
+        (
+            template
+            for template in templates
+            if template["research_area"].strip().lower() == wanted
+            or Path(template["filename"]).stem.lower() == wanted
+        ),
+        None,
+    )
+
+    if selected is None:
+        available = ", ".join(sorted(t["research_area"] for t in templates))
+        raise TemplateNotFoundError(
+            f"No template named {name!r}. Available research areas: {available}"
+        )
+
+    return self.load_template_file(selected)
+
+  def load_template_file(self, template: Dict[str, str]) -> BioinformaticsPrompt:
+    """
+    Load one specific template entry, as returned by list_available_templates().
+
+    Use this when you already hold the entry — a menu selection, say — rather
+    than a name. load_template(name) has to resolve the name by scanning, and
+    that scan stops at the first match, so passing a name round-trip can pick a
+    different file when two templates share a research_area.
+
+    Args:
+        template: An entry from list_available_templates().
+
+    Returns: The loaded BioinformaticsPrompt, also stored on self.prompt_template.
+
+    Raises:
+        TemplateLoadError: if the file could not be read or parsed.
+    """
     try:
-      with open(selected_template["filename"], "r") as f:
+      with open(template["filename"], "r") as f:
           self.prompt_template = BioinformaticsPrompt.from_json(f.read())
-      print(f"Loaded template: {selected_template['research_area']}")
-      return self.prompt_template
     except Exception as e:
-      print(f"Error loading template: {str(e)}")
-      return None
+      raise TemplateLoadError(
+          f"Could not load template {template['research_area']!r} "
+          f"from {template['filename']}: {e}"
+      ) from e
+
+    return self.prompt_template
 
   def route_template(self, user_query: str) -> Optional[Dict[str, str]]:
     """
@@ -157,8 +187,7 @@ class ClaudeInteraction:
     templates = self.list_available_templates()
 
     if not templates:
-        print(f"No prompt templates found in {self.prompt_dir}")
-        return None
+        raise TemplateNotFoundError(f"No prompt templates found in {self.prompt_dir}")
 
     # Deferred: these reach dspy, which ships only with the `routing` extra.
     # Both dspy_modules.lm and dspy_modules.router touch dspy at module scope
@@ -176,37 +205,29 @@ class ClaudeInteraction:
     prediction = router(question=user_query, areas=templates)
     matched = match_area(prediction.research_area, templates)
 
-    if not matched:
-        print(f"No matching template found for query: {user_query}")
-        return None
-
     return matched
 
-  def load_prompt_template_by_query(self, user_query: str) -> Optional[BioinformaticsPrompt]:
+  def load_template_by_query(self, user_query: str) -> Optional[BioinformaticsPrompt]:
     """
-    Route a user query to a template and load it, as an alternative to the
-    interactive numbered menu in load_prompt_template.
+    Route a user query to a template and load it.
 
     Args:
         user_query: The user's bioinformatics question.
 
-    Returns: The loaded BioinformaticsPrompt if a match was found and loaded
-        successfully, None otherwise (callers should fall back to the
-        interactive picker, e.g. load_prompt_template()).
+    Returns: The loaded BioinformaticsPrompt, or None if routing found no
+        match — callers should then pick a template explicitly with
+        load_template(name).
+
+    Raises:
+        RoutingUnavailableError: if the `routing` extra is not installed.
+        TemplateLoadError: if a template matched but could not be loaded.
     """
     matched = self.route_template(user_query)
 
     if not matched:
         return None
 
-    try:
-      with open(matched["filename"], "r") as f:
-          self.prompt_template = BioinformaticsPrompt.from_json(f.read())
-      print(f"Loaded template: {matched['research_area']}")
-      return self.prompt_template
-    except Exception as e:
-      print(f"Error loading template: {str(e)}")
-      return None
+    return self.load_template_file(matched)
 
   def generate_prompt(self, user_query: str) -> str:
     """
@@ -215,7 +236,10 @@ class ClaudeInteraction:
     Returns: Formatted prompt string
     """
     if not self.prompt_template:
-        raise ValueError("No prompt template loaded. Call load_prompt_template() first.")
+        raise NoTemplateLoadedError(
+            "No prompt template loaded. Call load_template(name) or "
+            "load_template_by_query(query) first."
+        )
     
     return self.prompt_template.generate_prompt(user_query)
 
@@ -237,13 +261,10 @@ class ClaudeInteraction:
           )
       else:
           self.system_prompt = system_prompt
-          
-      print(f"System prompt updated: {self.system_prompt[:50]}...")
   
   def reset_conversation(self) -> None:
     """Clear the conversation history."""
     self.conversation_history = []
-    print("Conversation history cleared.")
   
   def get_conversation_history(self) -> List[Dict[str, str]]:
     """Get the current conversation history."""
@@ -268,7 +289,7 @@ class ClaudeInteraction:
         if "sonnet" in model.id:
           return model.id
     except Exception as e:
-      print(f"Error querying available models: {str(e)}")
+      logger.warning("Could not query available models (%s); using %s", e, FALLBACK_MODEL)
 
     return FALLBACK_MODEL
 
@@ -285,157 +306,85 @@ class ClaudeInteraction:
         use_history: Whether to include conversation history
 
     Returns: Claude's response as a string
+
+    Raises:
+        anthropic.AnthropicError: propagated unchanged. Every SDK error —
+            RateLimitError, AuthenticationError, APIConnectionError and the
+            rest — descends from that single root, so callers can catch the
+            family in one handler. Wrapping them in a package type was
+            considered and rejected: it would flatten a genuinely useful
+            hierarchy, and `anthropic` is already a hard dependency.
     """
-    try:
-        import anthropic
+    import anthropic
 
-        # Initialize the client
-        client = anthropic.Anthropic(api_key=self.api_key)
+    client = anthropic.Anthropic(api_key=self.api_key)
 
-        # Use default model if none specified, resolving and caching it lazily
-        if model is None:
-            if self.default_model is None:
-                self.default_model = self._resolve_default_model(client)
-            model = self.default_model
+    # Use default model if none specified, resolving and caching it lazily
+    if model is None:
+        if self.default_model is None:
+            self.default_model = self._resolve_default_model(client)
+        model = self.default_model
 
-        # Set up system prompt if not already set
-        if self.system_prompt is None:
-            self.set_system_prompt()
-        
-        # Prepare messages
-        if use_history and self.conversation_history:
-            messages = self.conversation_history.copy()
-            messages.append({"role": "user", "content": prompt})
-        else:
-            messages = [{"role": "user", "content": prompt}]
-        
-        # Send the request
-        response = client.messages.create(
-            model=model,
-            max_tokens=max_tokens,
-            system=self.system_prompt,
-            messages=messages
-        )
-        
-        # Update conversation history if using it
-        if use_history:
-            self.conversation_history.append({"role": "user", "content": prompt})
-            self.conversation_history.append({"role": "assistant", "content": response.content[0].text})
-        
-        # Extract and return the response text
-        return response.content[0].text
-        
-    except ImportError:
-        print("Error: anthropic package not installed. Run 'pip install anthropic' to install.")
-        return "Unable to communicate with Claude API due to missing dependencies."
-    except Exception as e:
-        print(f"Error communicating with Claude API: {str(e)}")
-        return f"Error: {str(e)}"
-  
+    # Set up system prompt if not already set
+    if self.system_prompt is None:
+        self.set_system_prompt()
+
+    # Prepare messages
+    if use_history and self.conversation_history:
+        messages = self.conversation_history.copy()
+        messages.append({"role": "user", "content": prompt})
+    else:
+        messages = [{"role": "user", "content": prompt}]
+
+    response = client.messages.create(
+        model=model,
+        max_tokens=max_tokens,
+        system=self.system_prompt,
+        messages=messages
+    )
+
+    if use_history:
+        self.conversation_history.append({"role": "user", "content": prompt})
+        self.conversation_history.append({"role": "assistant", "content": response.content[0].text})
+
+    return response.content[0].text
+
   def ask_claude(self, user_query: str, model: str = None, max_tokens: int = 4000,
-                show_prompt: bool = False, use_history: bool = True, 
-                use_template: bool = True) -> str:
+                use_history: bool = True, use_template: bool = True) -> str:
     """
     Process a user query and get a response from Claude.
-    
+
     Args:
         user_query: The user's bioinformatics question
         model: Claude model to use (defaults to self.default_model)
         max_tokens: Maximum tokens in response
-        show_prompt: Whether to print the generated prompt (useful for debugging)
         use_history: Whether to include conversation history
         use_template: Whether to use the loaded prompt template. If False,
                       sends the raw query without formatting.
-        
-    Returns:
-        Claude's response as a string
+
+    Returns: Claude's response as a string
+
+    Raises:
+        NoTemplateLoadedError: if use_template is True and no template has been
+            loaded. This used to silently invoke the interactive picker, which
+            blocks on stdin in any process without a terminal.
+        anthropic.AnthropicError: propagated from send_to_claude.
     """
     model = model or self.default_model
-    
-    # Determine if we need to process the query through a template
+
     if use_template:
-        # Make sure we have a prompt template loaded
         if not self.prompt_template:
-            print("No prompt template loaded. Loading template...")
-            if not self.load_prompt_template():
-                return "Error: Failed to load a prompt template."
-        
-        # Generate the formatted prompt using the template
-        try:
-            prompt = self.generate_prompt(user_query)
-        except Exception as e:
-            print(f"Error generating prompt: {str(e)}")
-            return f"Error generating prompt: {str(e)}"
+            raise NoTemplateLoadedError(
+                "No prompt template loaded. Call load_template(name) or "
+                "load_template_by_query(query) first, or pass use_template=False."
+            )
+        prompt = self.generate_prompt(user_query)
     else:
-        # Use the raw query without template formatting
         prompt = user_query
-    
-    # Optionally show the prompt for debugging
-    if show_prompt:
-        print("\n===== PROMPT SENT TO CLAUDE =====")
-        print(prompt[:1000] + "..." if len(prompt) > 1000 else prompt)
-        print("=================================\n")
-    
-    # Send to Claude and get response
-    try:
-        return self.send_to_claude(
-            prompt, 
-            model=model, 
-            max_tokens=max_tokens,
-            use_history=use_history
-        )
-    except Exception as e:
-        print(f"Error in ask_claude: {str(e)}")
-        return f"An error occurred: {str(e)}"
 
-
-  def start_conversation(self, use_template: bool = True) -> None:
-    """
-    Start an interactive conversation with Claude in the terminal.
-    
-    Args:
-        use_template: Whether to format queries with the loaded template
-    """
-    # Start with a clean conversation history
-    self.reset_conversation()
-    
-    # Load prompt template if using templates
-    if use_template and not self.prompt_template:
-        if not self.load_prompt_template(interactive=True):
-            print("Failed to load template. Exiting conversation.")
-            return
-            
-    print("\n=== Starting conversation with Claude ===")
-    print("Type 'quit', 'exit', or 'bye' to end the conversation")
-    print("Type 'reset' to clear the conversation history")
-    print("Type 'template' to load a different template")
-    print("================================================\n")
-    
-    while True:
-        # Get user input
-        user_query = input("\nYou: ")
-        
-        # Check for exit commands
-        if user_query.lower() in ('quit', 'exit', 'bye'):
-            print("Ending conversation. Goodbye!")
-            break
-            
-        # Check for special commands
-        if user_query.lower() == 'reset':
-            self.reset_conversation()
-            print("Conversation history has been reset.")
-            continue
-            
-        if user_query.lower() == 'template':
-            self.load_prompt_template(interactive=True)
-            continue
-        
-        # Get response from Claude
-        response = self.ask_claude(
-            user_query, 
-            use_template=use_template, 
-            use_history=True
-        )
-        
-        # Print Claude's response
-        print("\nClaude:", response)
+    return self.send_to_claude(
+        prompt,
+        model=model,
+        max_tokens=max_tokens,
+        use_history=use_history
+    )

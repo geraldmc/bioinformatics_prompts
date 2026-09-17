@@ -60,10 +60,10 @@ def test_list_available_templates_sorted_alphabetically(prompt_dir):
     ]
 
 
-def test_load_prompt_template_noninteractive_uses_first_template(prompt_dir):
+def test_load_template_by_name(prompt_dir):
     interaction = ClaudeInteraction(api_key="test-key", prompt_dir=str(prompt_dir))
 
-    loaded = interaction.load_prompt_template(interactive=False)
+    loaded = interaction.load_template("Test Area")
 
     assert loaded is not None
     assert loaded.research_area == "Test Area"
