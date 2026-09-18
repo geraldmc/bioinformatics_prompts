@@ -1,7 +1,5 @@
 """Module containing the epigenomics research_area prompt template."""
 
-from pathlib import Path
-
 from bioinformatics_prompts.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create an epigenomics prompt template
@@ -745,23 +743,3 @@ Integrating ChIP-seq and RNA-seq to identify functional TF targets involves:
         "Zhu H, et al. (2016). Computational analysis of transcription factor binding sites across diverse cell types. Genome Research."
     ]
 )
-
-# Export the prompt for use in the package
-if __name__ == "__main__":
-    # Test the prompt with a sample query
-    user_query = "How do I analyze histone modification ChIP-seq data to identify cell-type specific enhancers?"
-    
-    # Generate prompt
-    prompt = epigenomics_prompt.generate_prompt(user_query)
-    print(prompt)
-    
-    # Save prompt template to JSON
-    with open(Path(__file__).resolve().parent.parent / "epigenomics_prompt.json", "w") as f:
-        f.write(epigenomics_prompt.to_json())
-
-   # Load prompt template from JSON
-    with open(Path(__file__).resolve().parent.parent / "epigenomics_prompt.json", "r") as f:
-        loaded_prompt = BioinformaticsPrompt.from_json(f.read())
-    
-    # Verify it works the same
-    assert loaded_prompt.generate_prompt(user_query) == prompt

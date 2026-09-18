@@ -1,7 +1,5 @@
 """Module containing the GWAS research_area prompt template."""
 
-from pathlib import Path
-
 from bioinformatics_prompts.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a GWAS prompt template
@@ -591,23 +589,3 @@ Effective fine-mapping and functional analysis involves:
         "Wray NR, et al. (2021). From basic science to clinical application of polygenic risk scores. JAMA Psychiatry."
     ]
 )
-
-# Export the prompt for use in the package
-if __name__ == "__main__":
-    # Test the prompt with a sample query
-    user_query = "How do I interpret GWAS results when I have hundreds of significant hits?"
-    
-    # Generate prompt
-    prompt = gwas_prompt.generate_prompt(user_query)
-    print(prompt)
-    
-    # Save prompt template to JSON
-    with open(Path(__file__).resolve().parent.parent / "gwas_prompt.json", "w") as f:
-        f.write(gwas_prompt.to_json())
-
-   # Load prompt template from JSON
-    with open(Path(__file__).resolve().parent.parent / "gwas_prompt.json", "r") as f:
-        loaded_prompt = BioinformaticsPrompt.from_json(f.read())
-    
-    # Verify it works the same
-    assert loaded_prompt.generate_prompt(user_query) == prompt

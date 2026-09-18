@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from bioinformatics_prompts.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a single-cell genomics prompt template
@@ -210,23 +208,3 @@ Your integration strategy should prioritize:
         "Chen G, et al. (2019). Single-cell multi-omics technology: methodology and application. Frontiers in Cell and Developmental Biology, 7, 260."
     ]
 )
-
-# Save prompt template to JSON
-if __name__ == "__main__":
-    # Test with a sample query
-    user_query = "How do I interpret cell clusters in my single-cell RNA-seq data from a mixed tissue sample?"
-    
-    # Generate prompt
-    prompt = single_cell_genomics_prompt.generate_prompt(user_query)
-    print(prompt)
-    
-    # Save prompt template to JSON
-    with open(Path(__file__).resolve().parent.parent / "single_cell_genomics_prompt.json", "w") as f:
-        f.write(single_cell_genomics_prompt.to_json())
-
-   # Load prompt template from JSON
-    with open(Path(__file__).resolve().parent.parent / "single_cell_genomics_prompt.json", "r") as f:
-        loaded_prompt = BioinformaticsPrompt.from_json(f.read())
-    
-    # Verify it works the same
-    assert loaded_prompt.generate_prompt(user_query) == prompt

@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from bioinformatics_prompts.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a workflow automation prompt template
@@ -247,23 +245,3 @@ workflow {
         "Di Tommaso P, et al. (2017). Nextflow enables reproducible computational workflows. Nature Biotechnology, 35(4), 316-319."
     ]
 )
-
-# Save the workflow automation prompt template to JSON
-if __name__ == "__main__":
-    # Test with a sample query
-    user_query = "How do I design a scalable and reproducible bioinformatics workflow for bacterial genome assembly and annotation?"
-    
-    # Generate prompt
-    prompt = workflow_automation_prompt.generate_prompt(user_query)
-    print(prompt)
-    
-    # Save prompt template to JSON
-    with open(Path(__file__).resolve().parent.parent / "workflow_automation_prompt.json", "w") as f:
-        f.write(workflow_automation_prompt.to_json())
-
-   # Load prompt template from JSON
-    with open(Path(__file__).resolve().parent.parent / "workflow_automation_prompt.json", "r") as f:
-        loaded_prompt = BioinformaticsPrompt.from_json(f.read())
-    
-    # Verify it works the same
-    assert loaded_prompt.generate_prompt(user_query) == prompt

@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from bioinformatics_prompts.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a bioinformatics tools prompt template
@@ -264,23 +262,3 @@ Multi-omics integration requires tools that can:
         "Ye Y, et al. (2021). A comprehensive survey of omics data resources for human diseases. Briefings in Bioinformatics, 22(6)."
     ]
 )
-
-# Save prompt template to JSON
-if __name__ == "__main__":
-    # Test with a sample query
-    user_query = "What considerations should I make when selecting alignment tools for my RNA-seq experiment?"
-    
-    # Generate prompt
-    prompt = bioinformatics_tools_prompt.generate_prompt(user_query)
-    print(prompt)
-    
-    # Save prompt template to JSON
-    with open(Path(__file__).resolve().parent.parent / "bioinformatics_tools_prompt.json", "w") as f:
-        f.write(bioinformatics_tools_prompt.to_json())
-
-   # Load prompt template from JSON
-    with open(Path(__file__).resolve().parent.parent / "bioinformatics_tools_prompt.json", "r") as f:
-        loaded_prompt = BioinformaticsPrompt.from_json(f.read())
-    
-    # Verify it works the same
-    assert loaded_prompt.generate_prompt(user_query) == prompt

@@ -1,7 +1,5 @@
 """Module containing the metagenomics research_area prompt template."""
 
-from pathlib import Path
-
 from bioinformatics_prompts.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a metagenomics prompt template
@@ -398,23 +396,3 @@ Key considerations for hot spring MAGs:
         "Kang DD, et al. (2019). MetaBAT 2: an adaptive binning algorithm for robust and efficient genome reconstruction from metagenome assemblies. PeerJ."
     ]
 )
-
-# Export the prompt for use in the package
-if __name__ == "__main__":
-    # Test the prompt with a sample query
-    user_query = "How can I compare the taxonomic composition between different environmental samples?"
-    
-    # Generate prompt
-    prompt = metagenomics_prompt.generate_prompt(user_query)
-    print(prompt)
-    
-    # Save prompt template to JSON
-    with open(Path(__file__).resolve().parent.parent / "metagenomics_prompt.json", "w") as f:
-        f.write(metagenomics_prompt.to_json())
-
-   # Load prompt template from JSON
-    with open(Path(__file__).resolve().parent.parent / "metagenomics_prompt.json", "r") as f:
-        loaded_prompt = BioinformaticsPrompt.from_json(f.read())
-    
-    # Verify it works the same
-    assert loaded_prompt.generate_prompt(user_query) == prompt

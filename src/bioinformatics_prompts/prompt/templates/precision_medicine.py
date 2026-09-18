@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from bioinformatics_prompts.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a precision medicine prompt template
@@ -406,23 +404,3 @@ Success depends on balancing scientific evidence, clinical utility, and implemen
         "Bai R, et al. (2024). Using genetics to guide clinical decisions: five considerations from the eMERGE Network. BMC Medicine, 22(1), 61."
     ]
 )
-
-# Save prompt template to JSON
-if __name__ == "__main__":
-    # Test with a sample query
-    user_query = "What are the best practices for interpreting and reporting incidental findings from whole genome sequencing?"
-    
-    # Generate prompt
-    prompt = precision_medicine_prompt.generate_prompt(user_query)
-    print(prompt)
-    
-    # Save prompt template to JSON
-    with open(Path(__file__).resolve().parent.parent / "precision_medicine_prompt.json", "w") as f:
-        f.write(precision_medicine_prompt.to_json())
-
-    # Load prompt template from JSON
-    with open(Path(__file__).resolve().parent.parent / "precision_medicine_prompt.json", "r") as f:
-        loaded_prompt = BioinformaticsPrompt.from_json(f.read())
-    
-    # Verify it works the same
-    assert loaded_prompt.generate_prompt(user_query) == prompt

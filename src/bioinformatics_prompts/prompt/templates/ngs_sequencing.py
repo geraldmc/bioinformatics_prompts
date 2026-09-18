@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from bioinformatics_prompts.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create an NGS sequencing prompt template
@@ -399,23 +397,3 @@ An optimal pipeline maximizes biological insight while minimizing technical arti
         "Ababou A, et al. (2023). High-throughput sequencing: Principles, applications, and emerging challenges. Frontiers in Bioinformatics, 3, 1195407."
     ]
 )
-
-# Save prompt template to JSON
-if __name__ == "__main__":
-    # Test with a sample query
-    user_query = "What are the best practices for variant calling in whole genome sequencing data?"
-    
-    # Generate prompt
-    prompt = ngs_sequencing_prompt.generate_prompt(user_query)
-    print(prompt)
-    
-    # Save prompt template to JSON
-    with open(Path(__file__).resolve().parent.parent / "ngs_sequencing_prompt.json", "w") as f:
-        f.write(ngs_sequencing_prompt.to_json())
-
-    # Load prompt template from JSON
-    with open(Path(__file__).resolve().parent.parent / "ngs_sequencing_prompt.json", "r") as f:
-        loaded_prompt = BioinformaticsPrompt.from_json(f.read())
-    
-    # Verify it works the same
-    assert loaded_prompt.generate_prompt(user_query) == prompt

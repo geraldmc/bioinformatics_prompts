@@ -80,6 +80,9 @@ bioinformatics-prompts/
 │           ├── __init__.py
 │           └── validation.py
 │
+├── scripts/                  # Maintainer tooling (not shipped in the wheel)
+│   └── regenerate_template_json.py  # prompt/templates/*.py -> prompt/*.json
+│
 ├── tests/                    # Test suite (pytest)
 │   ├── __init__.py
 │   ├── conftest.py
@@ -87,6 +90,7 @@ bioinformatics-prompts/
 │   ├── test_claude_interaction.py
 │   ├── test_prompt_template.py
 │   ├── test_router.py
+│   ├── test_template_sources.py
 │   ├── test_templates_importable.py
 │   └── test_validation.py
 │
@@ -112,6 +116,38 @@ uv sync
 ```
 
 Run any command in that environment with `uv run <command>` (e.g. `uv run bioinformatics-prompts`), or activate it directly with `source .venv/bin/activate`.
+
+#### Changing a bundled template
+
+Each of the 14 templates exists twice: `src/bioinformatics_prompts/prompt/templates/<area>.py`
+is the authored source, and `src/bioinformatics_prompts/prompt/<name>_prompt.json`
+is what the runtime reads. **Edit the Python, never the JSON**, then regenerate:
+
+```bash
+# Edit the template
+$EDITOR src/bioinformatics_prompts/prompt/templates/genomics.py
+
+# Rewrite every JSON file from its module
+uv run python scripts/regenerate_template_json.py
+
+# Commit both the module and the regenerated JSON
+git add src/bioinformatics_prompts/prompt/
+```
+
+The JSON is generated, but it is committed rather than built on install, because
+it is the package data the wheel ships. `tests/test_template_sources.py` compares
+every committed file to its module on every test run, so forgetting the
+regeneration step fails the suite — on all five Python versions in CI — with a
+message naming the template and the command to fix it.
+
+Templates are authored in Python rather than as data because their examples are
+long-form markdown with embedded code fences. JSON has no multi-line string
+literal, so one example is a single 1,600-character line, and a one-word change
+to it would arrive in a pull request as a whole rewritten line.
+
+To ship *different* templates rather than change these, you do not need any of
+this — point `ClaudeInteraction(prompt_dir=...)` or `--prompt-dir` at your own
+directory of JSON files.
 
 ### As a dependency of another local project
 
