@@ -1,7 +1,5 @@
 """Module containing the sequence analysis research_area prompt template."""
 
-from pathlib import Path
-
 from bioinformatics_prompts.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a sequence analysis prompt template
@@ -553,23 +551,3 @@ After successful assembly:
         "Kolmogorov M, et al. (2019). Assembly of long, error-prone reads using repeat graphs. Nature Biotechnology."
     ]
 )
-
-# Export the prompt for use in the package
-if __name__ == "__main__":
-    # Test the prompt with a sample query
-    user_query = "How do I compare protein sequences from different bacterial species?"
-    
-    # Generate prompt
-    prompt = sequence_analysis_prompt.generate_prompt(user_query)
-    print(prompt)
-    
-    # Save prompt template to JSON
-    with open(Path(__file__).resolve().parent.parent / "sequence_analysis_prompt.json", "w") as f:
-        f.write(sequence_analysis_prompt.to_json())
-
-   # Load prompt template from JSON
-    with open(Path(__file__).resolve().parent.parent / "sequence_analysis_prompt.json", "r") as f:
-        loaded_prompt = BioinformaticsPrompt.from_json(f.read())
-    
-    # Verify it works the same
-    assert loaded_prompt.generate_prompt(user_query) == prompt

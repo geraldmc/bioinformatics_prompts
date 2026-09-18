@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from bioinformatics_prompts.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a blockchain in bioinformatics prompt template
@@ -354,23 +352,3 @@ Blockchain can create an immutable, time-stamped record of these elements while 
         "Agbo CC, et al. (2022). A comprehensive review of blockchain technology in clinical trials management for biomedical research. IEEE Access, 10, 105825-105842."
     ]
 )
-
-# Save prompt template to JSON
-if __name__ == "__main__":
-    # Test with a sample query
-    user_query = "How can I implement blockchain to ensure privacy and security of patient genomic data?"
-    
-    # Generate prompt
-    prompt = blockchain_bioinformatics_prompt.generate_prompt(user_query)
-    print(prompt)
-    
-    # Save prompt template to JSON
-    with open(Path(__file__).resolve().parent.parent / "blockchain_bioinformatics_prompt.json", "w") as f:
-        f.write(blockchain_bioinformatics_prompt.to_json())
-
-    # Load prompt template from JSON
-    with open(Path(__file__).resolve().parent.parent / "blockchain_bioinformatics_prompt.json", "r") as f:
-        loaded_prompt = BioinformaticsPrompt.from_json(f.read())
-    
-    # Verify it works the same
-    assert loaded_prompt.generate_prompt(user_query) == prompt

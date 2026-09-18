@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from bioinformatics_prompts.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a synthetic biology prompt template
@@ -336,23 +334,3 @@ Effective design navigates tradeoffs between sensitivity, specificity, and robus
         "Ko YS, et al. (2024). Development of a new ensemble model to predict the metabolic design of complex nonlinear pathways. Metabolic Engineering, 78, 46-58."
     ]
 )
-
-# Save prompt template to JSON
-if __name__ == "__main__":
-    # Test with a sample query
-    user_query = "How do I design a genetic circuit for biosensing environmental toxins?"
-    
-    # Generate prompt
-    prompt = synthetic_biology_prompt.generate_prompt(user_query)
-    print(prompt)
-    
-    # Save prompt template to JSON
-    with open(Path(__file__).resolve().parent.parent / "synthetic_biology_prompt.json", "w") as f:
-        f.write(synthetic_biology_prompt.to_json())
-
-    # Load prompt template from JSON
-    with open(Path(__file__).resolve().parent.parent / "synthetic_biology_prompt.json", "r") as f:
-        loaded_prompt = BioinformaticsPrompt.from_json(f.read())
-    
-    # Verify it works the same
-    assert loaded_prompt.generate_prompt(user_query) == prompt

@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from bioinformatics_prompts.prompt_template import BioinformaticsPrompt, FewShotExample
 
 # Create a data standardization prompt template
@@ -280,23 +278,3 @@ A successful integration strategy must balance standardization with flexibility 
         "Queralt-Rosinach N, et al. (2021). Knowledge graphs and wikidata subsetting for rare disease cohort analytics. Scientific Data, 8(1), 294."
     ]
 )
-
-# Save prompt template to JSON
-if __name__ == "__main__":
-    # Test with a sample query
-    user_query = "What standards should I follow when preparing my multi-omics dataset for publication?"
-    
-    # Generate prompt
-    prompt = data_standardization_prompt.generate_prompt(user_query)
-    print(prompt)
-    
-    # Save prompt template to JSON
-    with open(Path(__file__).resolve().parent.parent / "data_standardization_prompt.json", "w") as f:
-        f.write(data_standardization_prompt.to_json())
-
-   # Load prompt template from JSON
-    with open(Path(__file__).resolve().parent.parent / "data_standardization_prompt.json", "r") as f:
-        loaded_prompt = BioinformaticsPrompt.from_json(f.read())
-    
-    # Verify it works the same
-    assert loaded_prompt.generate_prompt(user_query) == prompt
