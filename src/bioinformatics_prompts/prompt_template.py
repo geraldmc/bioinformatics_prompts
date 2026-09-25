@@ -1,3 +1,14 @@
+"""The data model: what a prompt template is, and how it serialises.
+
+BioinformaticsPrompt holds a research area's context -- key concepts, tools,
+file formats and few-shot examples -- and renders it into a prompt around a
+user query. FewShotExample is the element type of its `examples` argument.
+
+These two classes are the authored form of the 14 bundled templates. The
+JSON the runtime reads is generated from them; see
+scripts/regenerate_template_json.py (#25).
+"""
+
 from typing import List, Dict, Optional
 from dataclasses import dataclass
 import json

@@ -203,3 +203,98 @@ jobs:
               )
           print(f"installed wheel loads {len(templates)} templates")
           PY
+
+  docs:
+    name: Build the docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          enable-cache: "auto"
+
+      - name: Install the docs toolchain
+        # Only the docs group: mkdocstrings reads the source statically through
+        # Griffe (`paths: [src]`), so the build imports neither the package nor
+        # dspy. If this ever needs the runtime dependencies, something has
+        # started importing at documentation time and should be fixed there.
+        run: uv sync --locked --group docs
+
+      - name: Build
+        # --strict turns every warning into a failure: a nav entry that does not
+        # resolve, a dead internal link, an anchor that no longer exists.
+        run: uv run mkdocs build --strict
+
+      - name: Check the generated pages are actually in the site
+        # --strict is not sufficient on its own, and this is not a hypothetical:
+        # the catalogue was first generated into `docs/templates/`, which MkDocs
+        # excludes from every build by default (`_default_exclude` is
+        # ['.*', '/templates/'], reserved for theme Jinja templates). All 15
+        # pages were generated, listed in the nav, and silently dropped from the
+        # site -- with `mkdocs build --strict` still exiting 0. Only counting
+        # the output catches that class of failure.
+        run: |
+          set -euo pipefail
+          expected=$(ls src/bioinformatics_prompts/prompt/*.json | wc -l)
+          # -mindepth 2 skips the catalogue's own landing page (checked
+          # separately below); -not -path '*/.*' skips literate-nav's .nav file,
+          # which is built as a page because the plugin marks it NOT_IN_NAV
+          # rather than excluded.
+          built=$(find site/catalogue -mindepth 2 -name index.html -not -path '*/.*' | wc -l)
+          echo "template JSON: $expected, catalogue pages built: $built"
+          if [ "$built" -ne "$expected" ]; then
+            echo "::error::expected $expected catalogue pages in the site, found $built"
+            exit 1
+          fi
+          if [ ! -f site/catalogue/index.html ]; then
+            echo "::error::the catalogue landing page is missing from the site"
+            exit 1
+          fi
+          # reference/index.md lands at site/reference/index.html; the others
+          # each get a directory of their own under use_directory_urls.
+          missing=()
+          [ -f site/reference/index.html ] || missing+=("index")
+          for page in client templates exceptions; do
+            [ -f "site/reference/$page/index.html" ] || missing+=("$page")
+          done
+          if [ ${#missing[@]} -ne 0 ]; then
+            echo "::error::reference pages missing from the site: ${missing[*]}"
+            exit 1
+          fi
+          echo "all reference pages present"
+
+      - name: Upload the site
+        # Shared with deploy-docs below, so `main` publishes exactly the
+        # artifact these checks just passed rather than building a second time.
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+
+  deploy-docs:
+    name: Deploy to GitHub Pages
+    needs: [test, core-only, build, docs]
+    # Only the default branch publishes. Pull requests still build the site in
+    # the `docs` job above; they just do not deploy it.
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # Granted here rather than at the top of the file, so every other job keeps
+    # the read-only default.
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy
+        id: deployment
+        # Requires Settings -> Pages -> Source to be set to "GitHub Actions".
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

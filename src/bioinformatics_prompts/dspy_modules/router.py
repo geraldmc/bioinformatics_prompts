@@ -30,6 +30,17 @@ class TemplateRouter(dspy.Module):
         self.select = dspy.Predict(SelectResearchArea)
 
     def forward(self, question: str, areas: List[Dict]) -> dspy.Prediction:
+        """Pick the research area whose template best fits a question.
+
+        Args:
+            question: The user's query, in their own words.
+            areas: Template entries to choose between, as
+                `ClaudeInteraction.list_available_templates()` returns them.
+                Only `research_area` and `description` are read.
+
+        Returns:
+            A `dspy.Prediction` whose `research_area` names the chosen area.
+        """
         available_areas = "\n".join(
             f"{area['research_area']}: {area.get('description', '')}" for area in areas
         )

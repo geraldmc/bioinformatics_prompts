@@ -115,6 +115,8 @@ EXPECTED_EXPORTS = [
     "TemplateInfo",
     "TemplateLoadError",
     "TemplateNotFoundError",
+    "ValidationResult",
+    "validate_prompt",
 ]
 
 
@@ -124,10 +126,36 @@ def test_all_is_exactly_the_declared_surface():
     FewShotExample is the load-bearing one. It is the element type of
     BioinformaticsPrompt's `examples` argument, so before this the exported
     class could not be constructed from the exported names alone.
+
+    validate_prompt and ValidationResult were added by #24. The README had
+    documented `from bioinformatics_prompts.utils.validation import
+    validate_prompt` since before #21 drew this line, so the package was
+    telling people to use a name it reserved the right to move. Generating an
+    API reference forced the contradiction to be settled, and it was settled in
+    the direction the README already promised.
     """
     import bioinformatics_prompts
 
     assert bioinformatics_prompts.__all__ == EXPECTED_EXPORTS
+
+
+def test_validation_is_reachable_from_the_top_level():
+    """The import path the docs and README now use.
+
+    Reaching validate_prompt used to take four path segments through a `utils`
+    package; ValidationResult comes with it because a consumer annotating the
+    return value needs both names to come from the same place.
+    """
+    from bioinformatics_prompts import ValidationResult, validate_prompt
+    from bioinformatics_prompts.utils.validation import (
+        ValidationResult as CanonicalResult,
+    )
+    from bioinformatics_prompts.utils.validation import (
+        validate_prompt as canonical_validate,
+    )
+
+    assert validate_prompt is canonical_validate
+    assert ValidationResult is CanonicalResult
 
 
 def test_every_exported_name_resolves():
