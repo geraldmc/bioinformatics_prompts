@@ -217,17 +217,24 @@ jobs:
         with:
           enable-cache: "auto"
 
-      - name: Install the docs toolchain
-        # Only the docs group: mkdocstrings reads the source statically through
-        # Griffe (`paths: [src]`), so the build imports neither the package nor
-        # dspy. If this ever needs the runtime dependencies, something has
-        # started importing at documentation time and should be fixed there.
-        run: uv sync --locked --group docs
+      - name: Install the docs toolchain, and nothing else
+        # --no-default-groups is load-bearing, not tidiness: `--group` *adds* to
+        # the default groups, so `uv sync --group docs` on its own also installs
+        # dev -- dspy, openai, pytest, mypy -- and the guarantee below would be
+        # unenforced. mkdocstrings reads the source statically through Griffe
+        # (`paths: [src]`), so this build imports neither the package nor dspy.
+        # If it ever needs them, something has started importing at
+        # documentation time and should be fixed there rather than here.
+        run: uv sync --locked --no-default-groups --group docs
 
       - name: Build
         # --strict turns every warning into a failure: a nav entry that does not
         # resolve, a dead internal link, an anchor that no longer exists.
-        run: uv run mkdocs build --strict
+        #
+        # The flags are repeated because `uv run` re-syncs the environment to
+        # the default groups first, which would quietly reinstate everything the
+        # install step just excluded.
+        run: uv run --no-default-groups --group docs mkdocs build --strict
 
       - name: Check the generated pages are actually in the site
         # --strict is not sufficient on its own, and this is not a hypothetical:
@@ -288,6 +295,17 @@ jobs:
     permissions:
       pages: write
       id-token: write
+
+    # A group of its own, deliberately not the workflow-wide one. That group is
+    # keyed on github.ref with cancel-in-progress disabled on main, so two
+    # pushes landing close together produce two runs that both reach this job
+    # and race each other's Pages deployment -- actions/deploy-pages fails one,
+    # turning a green merge red. GitHub's own Pages workflow uses a dedicated
+    # "pages" group for the same reason. Queued rather than cancelled, so the
+    # last push to land is the one that publishes.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
 
     environment:
       name: github-pages

@@ -43,8 +43,8 @@ theme:
 
 plugins:
   - search
-  # Writes the 14 template catalogue pages and their SUMMARY.md into the build,
-  # never onto disk. Package data is committed and drift-tested because it
+  # Writes the 14 template catalogue pages, a landing page and the literate-nav
+  # file (.nav.md) into the build, never onto disk. Package data is committed and drift-tested because it
   # ships in the wheel (#25); docs pages ship to a website, so they are
   # generated here and nothing has to be remembered or regenerated.
   - gen-files:
@@ -105,9 +105,11 @@ nav:
       - guide/errors.md
       - guide/routing.md
       - guide/custom-templates.md
-  # The trailing slash delegates this section to templates/SUMMARY.md, which
-  # gen-files writes. Without it the 14 pages would need listing by hand here —
-  # exactly the staleness this issue set out to remove.
+  # The trailing slash delegates this section to catalogue/.nav.md (the
+  # nav_file configured above), which gen-files writes. Without it the 14 pages
+  # would need listing by hand here — exactly the staleness this issue set out
+  # to remove. The directory is catalogue/, not templates/: MkDocs excludes
+  # /templates/ from every build by default.
   - Templates: catalogue/
   - API reference:
       - reference/index.md

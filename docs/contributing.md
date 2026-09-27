@@ -26,6 +26,11 @@ The dependency groups are split so CI can install less than a developer does:
 | `dev` | `test` plus dspy | a bare `uv sync` |
 | `docs` | mkdocs, Material, mkdocstrings, gen-files, literate-nav | `uv sync --group docs` |
 
+Note that `--group` *adds* to the default groups rather than replacing them, so
+`uv sync --group docs` gives a contributor dev **and** docs — which is usually
+what you want locally. CI's `docs` job pairs it with `--no-default-groups`
+precisely so the build is proved not to need the runtime dependencies.
+
 `docs` is not part of `dev` on purpose: the everyday contributor loop should not
 pay for the documentation toolchain, and the `core-only` CI job proves the test
 suite needs none of it.
@@ -59,8 +64,16 @@ Two parts of the site are generated and must not be committed:
   docs build cannot be broken by an import-time regression, and needs neither
   `dspy` nor an installed wheel.
 - **The template catalogue** is written at build time by
-  `docs/gen_template_pages.py` from the template JSON. `docs/templates/` never
-  exists on disk.
+  `scripts/gen_template_pages.py` from the template JSON, into `catalogue/`.
+  That directory never exists on disk.
+
+    The generator lives in `scripts/`, not `docs/`, because anything inside
+    `docs_dir` that is not Markdown is copied into the built site as a static
+    asset — a generator there would publish its own source. And the output is
+    `catalogue/`, **not** `templates/`: MkDocs excludes `/templates/` from every
+    build by default, so a catalogue written there is generated, appears in the
+    nav, and is silently dropped from the site while `mkdocs build --strict`
+    still exits 0.
 
 `tests/test_docs.py` guards both: it asserts the reference documents exactly
 `__all__`, and that the catalogue renders a page per template. It reads text

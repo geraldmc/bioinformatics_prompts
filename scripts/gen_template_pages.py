@@ -54,9 +54,12 @@ for path, data in templates:
 # literate-nav reads this to build the Templates section; mkdocs.yml delegates
 # to it with the trailing slash in `Templates: catalogue/`.
 #
-# Named `.nav.md` rather than the default `SUMMARY.md` so it does not ship as a
-# page of its own: literate-nav marks its nav file NOT_IN_NAV, which still gets
-# built, whereas a leading dot matches MkDocs' `.*` default exclusion and drops
-# it from the site entirely.
+# literate-nav marks its own nav file NOT_IN_NAV, which is still *built*, so
+# this page ships either way -- `site/catalogue/.nav/` exists and is listed in
+# sitemap.xml. The plugin offers no way to suppress it. Two things make that
+# harmless: the `search: exclude: true` front matter render_summary emits keeps
+# it out of site search, and the leading dot keeps it out of directory
+# listings. It is not excluded from the build; do not write a comment here
+# claiming that it is.
 with mkdocs_gen_files.open("catalogue/.nav.md", "w") as summary:
     summary.write(render_summary(templates))

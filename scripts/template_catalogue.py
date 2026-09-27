@@ -140,8 +140,9 @@ def render_summary(templates: Iterable[Template]) -> str:
     """Render the literate-nav file for the Templates section.
 
     mkdocs.yml delegates that section with a trailing slash (`Templates:
-    catalogue/`), so this file -- not a hand-maintained `nav:` list -- decides
-    which pages appear and in what order.
+    catalogue/`) and reads it as `nav_file: .nav.md`, so this file -- not a
+    hand-maintained `nav:` list -- decides which pages appear and in what
+    order.
 
     Args:
         templates: The (path, data) pairs `iter_templates` yields.

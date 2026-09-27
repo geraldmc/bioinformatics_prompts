@@ -183,13 +183,14 @@ def test_readme_links_to_the_documentation_site():
 def test_catalogue_summary_lists_every_page():
     """literate-nav builds the Templates section from this file.
 
-    A page missing from SUMMARY.md still builds, but is unreachable from the
-    navigation -- so it would be invisible rather than broken.
+    A page missing from the nav file (`catalogue/.nav.md`) still builds, but
+    is unreachable from the navigation -- so it would be invisible rather than
+    broken.
     """
     catalogue = load_catalogue_module()
 
     summary = catalogue.render_summary(catalogue.iter_templates(PROMPT_DIR))
 
     for path in TEMPLATE_FILES:
-        assert f"{path.stem}.md" in summary, f"{path.stem} missing from SUMMARY.md"
+        assert f"{path.stem}.md" in summary, f"{path.stem} missing from .nav.md"
     assert summary.count("\n-") + summary.count("- ") >= len(TEMPLATE_FILES)
