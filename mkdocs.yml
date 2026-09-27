@@ -1,0 +1,119 @@
+site_name: Bioinformatics Prompts
+site_description: >-
+  Bioinformatics-specific prompt templates for Anthropic's Claude — 14 research
+  areas, a typed Python API, and a CLI.
+site_author: geraldmc
+
+# The full path, including the repository segment: this is a *project* Pages
+# site served under a user site that already occupies the root. Only the
+# sitemap and canonical links are built from it — every other link Material
+# generates is relative, so the subpath needs no other handling. If the user
+# site ever takes a custom domain, GitHub serves project sites from that domain
+# too and this value moves with it (see #24).
+site_url: https://geraldmc.github.io/bioinformatics_prompts/
+
+repo_url: https://github.com/geraldmc/bioinformatics_prompts
+repo_name: geraldmc/bioinformatics_prompts
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - search.highlight
+  palette:
+    # The site follows the reader's system setting, with an explicit toggle
+    # either way — the same courtesy the package extends to logging config.
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
+plugins:
+  - search
+  # Writes the 14 template catalogue pages, a landing page and the literate-nav
+  # file (.nav.md) into the build, never onto disk. Package data is committed and drift-tested because it
+  # ships in the wheel (#25); docs pages ship to a website, so they are
+  # generated here and nothing has to be remembered or regenerated.
+  - gen-files:
+      scripts:
+        - scripts/gen_template_pages.py
+  - literate-nav:
+      nav_file: .nav.md
+  - mkdocstrings:
+      handlers:
+        python:
+          # Relative to this file, so the working directory is irrelevant.
+          # Griffe reads the source statically — the package is never imported.
+          paths: [src]
+          options:
+            docstring_style: google
+            docstring_section_style: table
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            separate_signature: true
+            show_signature_annotations: true
+            signature_crossrefs: true
+            merge_init_into_class: true
+            show_source: false
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+# Raised above their defaults so `mkdocs build --strict` fails on them. A docs
+# split is precisely the moment internal links break, and a dead anchor is
+# invisible in a rendered page.
+validation:
+  nav:
+    omitted_files: warn
+    not_found: warn
+  links:
+    anchors: warn
+    absolute_links: warn
+    unrecognized_links: warn
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Guide:
+      - guide/cli.md
+      - guide/library.md
+      - guide/errors.md
+      - guide/routing.md
+      - guide/custom-templates.md
+  # The trailing slash delegates this section to catalogue/.nav.md (the
+  # nav_file configured above), which gen-files writes. Without it the 14 pages
+  # would need listing by hand here — exactly the staleness this issue set out
+  # to remove. The directory is catalogue/, not templates/: MkDocs excludes
+  # /templates/ from every build by default.
+  - Templates: catalogue/
+  - API reference:
+      - reference/index.md
+      - reference/client.md
+      - reference/templates.md
+      - reference/exceptions.md
+  - Contributing: contributing.md

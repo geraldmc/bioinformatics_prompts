@@ -1,3 +1,19 @@
+"""Bioinformatics-specific prompt templates for Anthropic's Claude.
+
+The package bundles 14 research-area templates -- genomics, single-cell, GWAS
+and so on -- each carrying key concepts, common tools, file formats and
+few-shot examples. `ClaudeInteraction` loads one and wraps a user's question in
+it before sending it to Claude.
+
+Everything this package promises is named in `__all__` below and documented in
+the API reference. Anything else may move without notice.
+
+    >>> from bioinformatics_prompts import ClaudeInteraction
+    >>> client = ClaudeInteraction(require_api_key=False)
+    >>> len(client.list_available_templates())
+    14
+"""
+
 import logging
 
 # Installed before the submodule imports below, deliberately: anything a
@@ -30,12 +46,23 @@ from bioinformatics_prompts.prompt_template import (  # noqa: E402
     BioinformaticsPrompt,
     FewShotExample,
 )
+from bioinformatics_prompts.utils.validation import (  # noqa: E402
+    ValidationResult,
+    validate_prompt,
+)
 
 # The exceptions are exported alongside the types on purpose. exceptions.py
 # imports nothing beyond the stdlib (#14) and claude_interaction already pulls
 # five of the six in, so naming them here reaches no further than importing the
 # package already does — including RoutingUnavailableError, which describes the
 # optional `routing` extra but never touches dspy (#11).
+#
+# validate_prompt and ValidationResult joined in #24. utils/validation.py
+# imports only the stdlib and prompt_template, which claude_interaction already
+# pulls in, so this costs the import graph two first-party modules and no new
+# dependency at all -- measured, not assumed.
+# Its three siblings (batch_validate_prompts, run_test_query,
+# export_all_prompts) are deliberately not exported: nothing documents them.
 __all__ = [
     "BioinformaticsPrompt",
     "BioinformaticsPromptsError",
@@ -47,6 +74,8 @@ __all__ = [
     "TemplateInfo",
     "TemplateLoadError",
     "TemplateNotFoundError",
+    "ValidationResult",
+    "validate_prompt",
 ]
 
 

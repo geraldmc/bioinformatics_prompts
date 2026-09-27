@@ -27,11 +27,27 @@ class ValidationResult(TypedDict):
 
 
 def validate_prompt(prompt: BioinformaticsPrompt) -> ValidationResult:
-    """
-    Validate a bioinformatics prompt for common issues.
-    
-    Args: prompt: BioinformaticsPrompt to validate
-    Returns: Dictionary with validation results
+    """Check a template for the problems that make it a weak prompt.
+
+    Looks for a thin or missing description, too few key concepts or tools, no
+    examples, examples whose responses carry no code block, and missing
+    references. Nothing here inspects Claude's output — it is a check on the
+    template, run before you rely on it.
+
+    Args:
+        prompt: The template to check. Bundled or your own; this never reads
+            from disk.
+
+    Returns:
+        A `ValidationResult` with `valid`, `warnings` and `errors`. `valid` is
+        False only when `errors` is non-empty — warnings describe a template
+        that will work but could be better.
+
+    Example:
+        >>> from bioinformatics_prompts import ClaudeInteraction, validate_prompt
+        >>> template = ClaudeInteraction(require_api_key=False).load_template("Genomics")
+        >>> validate_prompt(template)["valid"]
+        True
     """
     results: ValidationResult = {
         "valid": True,
@@ -132,20 +148,3 @@ def export_all_prompts(prompts_dict: Dict[str, BioinformaticsPrompt], output_dir
             f.write(prompt.to_json())
             
     logger.info("Exported %d prompts to %s", len(prompts_dict), output_dir)
-
-
-if __name__ == "__main__":
-    # FewShotExample usage
-    from bioinformatics_prompts.prompt.templates.genomics import genomics_prompt
-    
-    # Validate a single prompt
-    validation_result = validate_prompt(genomics_prompt)
-    print(f"Validation result: {json.dumps(validation_result, indent=2)}")
-    
-    # Test with a query
-    test_query = "How do I analyze RNA-seq data from a non-model organism?"
-    formatted_prompt = run_test_query(genomics_prompt, test_query)
-    print(f"\nFormatted prompt preview:\n{formatted_prompt[:300]}...\n")
-    
-    # Export the prompt
-    export_all_prompts({"genomics": genomics_prompt}, "exported_prompts")

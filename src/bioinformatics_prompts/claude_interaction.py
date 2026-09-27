@@ -1,3 +1,10 @@
+"""The Claude client: load a prompt template, ask a question, get an answer.
+
+This is the module a consumer programs against. ClaudeInteraction owns the
+template directory, the Anthropic client and the conversation history;
+everything terminal-facing lives in cli_chat.py instead (#14).
+"""
+
 import os
 import json
 import logging

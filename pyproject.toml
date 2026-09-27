@@ -59,6 +59,18 @@ dev = [
     { include-group = "test" },
     "dspy>=3.3.0",
 ]
+# Not in `dev`: the contributor loop should not pay for the docs toolchain, and
+# the core-only CI job proves the test suite needs none of it. mkdocstrings
+# reads the source statically through Griffe (`paths: [src]` in mkdocs.yml), so
+# nothing here has to import the package -- the docs build cannot be broken by
+# an import-time regression, and needs neither dspy nor an installed wheel.
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.7",
+    "mkdocstrings[python]>=1.0",
+    "mkdocs-gen-files>=0.6",
+    "mkdocs-literate-nav>=0.6",
+]
 
 [build-system]
 requires = ["uv_build>=0.12.0,<0.13.0"]

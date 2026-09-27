@@ -1,3 +1,10 @@
+"""The `bioinformatics-prompts` command line entry point.
+
+A thin Click wrapper over ClaudeInteraction: `chat`, `list-templates` and
+`route`. The interactive loop itself lives in cli_chat.py, so importing the
+library never pulls in terminal code.
+"""
+
 import anthropic
 import click
 from dotenv import load_dotenv
